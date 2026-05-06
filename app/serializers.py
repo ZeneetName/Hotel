@@ -53,8 +53,6 @@ class HotelSerializer(serializers.ModelSerializer):
 
         ]
 
-
-
         read_only_fields = ["id", "created_at", "rating"]
 
 class RoomSerializer(serializers.ModelSerializer):
@@ -99,6 +97,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at"]
 
+    def validate_score(self, value):
+        if 1 <= value <= 5:
+            raise serializers.ValidationError('Рейтинг должен быть в промежутке от 1 до 5')
+        return value
 
 
 
