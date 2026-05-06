@@ -20,6 +20,15 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
         read_only_fields = ['id', 'is_admin']
 
+    def validate_password(self, value):
+        if len(value) < 5:
+            raise serializers.ValidationError("Пароль должен быть больше 5 символов")
+        return value
+
+    def validate_phone(self, value):
+        if  value[0] != '+' and value[1] != '7':
+            raise serializers.ValidationError("Номер телефона должен начинаться с +7")
+        return value
 
     def create(self, validated_data):
         return CustomAuthenticationUser.objects.create_user(**validated_data)
@@ -43,6 +52,8 @@ class HotelSerializer(serializers.ModelSerializer):
             "created_at",
 
         ]
+
+
 
         read_only_fields = ["id", "created_at", "rating"]
 
