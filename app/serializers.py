@@ -51,6 +51,7 @@ class HotelSerializer(serializers.ModelSerializer):
             "rating",
             "created_at",
 
+
         ]
 
         read_only_fields = ["id", "created_at", "rating"]
@@ -81,8 +82,9 @@ class BookingSerializer(serializers.ModelSerializer):
             "check_out",
             "total_price",
             "created_at",
+            "total_days",
         ]
-        read_only_fields = ["id", "created_at", "total_price"]
+        read_only_fields = ["id", "created_at", "total_price", "total_days"]
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:

@@ -65,6 +65,14 @@ class Booking(models.Model):
     check_out  = models.DateField(verbose_name='Дата выезда')
     total_price = models.IntegerField(verbose_name='Итоговая цена', default=0)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='врумя создания бронирования')
+    total_days = models.SmallIntegerField(default=0, verbose_name='количество дней')
+
+
+    def save(self, *args, **kwargs):
+        if self.check_in and self.check_out:
+            day = self.check_out - self.check_in
+            self.total_days = day.days
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'Пользователь {self.user} забронировал с {self.check_in} до {self.check_out}'

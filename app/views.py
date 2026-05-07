@@ -72,6 +72,11 @@ class HotelViewSets(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
 
+    def final_rating(self, request):
+        queryset = self.queryset
+
+        final_rating = queryset.annotate()
+
 
 class RoomViewSets(viewsets.ModelViewSet):
     queryset = Room.objects.all()
