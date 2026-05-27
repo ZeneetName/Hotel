@@ -48,7 +48,7 @@ class CustomAuthenticationUser(AbstractUser):
 class Hotel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(CustomAuthenticationUser, on_delete=models.CASCADE, related_name='owner', verbose_name='Владелец')
-    hostel_images = models.ImageField(unique=True, blank=True, null=True, verbose_name='Фотошрафии')
+    hostel_images = models.ImageField(unique=True, blank=True, null=True, verbose_name='Фотография')
     title = models.CharField(max_length=128, unique=True, verbose_name='Название')
     description = models.TextField(verbose_name='Описание отеля')
     address = models.TextField(verbose_name='Адрес')
@@ -112,3 +112,24 @@ class Review(models.Model):
     def __str__(self):
         return f'Пользователь {self.user} отсавил отзыв: {self.text} гостинице {self.hotel}'
 
+
+class Dish(models.Model):
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, verbose_name='ссылка_на_отель')
+    dish_images = models.ImageField(verbose_name='Фото_блюда')
+    title = models.CharField(max_length=256, verbose_name='Название блюда')
+    composition = models.TextField(verbose_name='Состав блюда')
+    weight = models.PositiveSmallIntegerField(verbose_name='Вес блюда')
+    price = models.PositiveSmallIntegerField(verbose_name='Цена')
+
+    def __str__(self):
+        return f'Блюдо {self.title} состоит из: {self.composition} и стоит {self.price}'
+
+class Service(models.Model):
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, verbose_name='ссылка_отель')
+    service_images = models.ImageField(verbose_name='Фото_услуги')
+    title = models.CharField(max_length=256, verbose_name='Название услуги')
+    price = models.PositiveSmallIntegerField(verbose_name='Цена усплуги')
+    duration = models.PositiveSmallIntegerField(verbose_name='Длительность')
+
+    def __str__(self):
+        return f'Услуга {self.title} стои: {self.price}'

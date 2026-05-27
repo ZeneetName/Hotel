@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomAuthenticationUser, Hotel, Room, Review, Booking
+from .models import Dish, Service, CustomAuthenticationUser, Hotel, Room, Review, Booking
 from .utils import room_is_available
 
 
@@ -142,3 +142,29 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 
+class DishSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Dish
+        fields = [
+            "hotel",
+            "dish_images",
+            "title",
+            "composition",
+            "weight",
+            "price",
+        ]
+        read_only_fields = ["hotel"]
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = [
+            "hotel",
+            "service_images",
+            "title",
+            "price",
+            "duration",
+        ]
+
+        read_only_fields = ["hotel"]
