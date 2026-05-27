@@ -32,15 +32,16 @@ ALLOWED_HOSTS = os.environ.get(
     'localhost,127.0.0.1,[::1],backend',
 
 ).split(',')
+
 CORS_ALLOWED_ORIGINS = [
-    'CORS_ALLOWED_ORIGINS '
+    "http://localhost",
 ]
 
 AUTH_USER_MODEL = 'app.CustomAuthenticationUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':[
-        'app.authentication.BearerToken'
+        'rest_framework.authentication.TokenAuthentication'
     ]
 }
 
@@ -156,4 +157,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1",
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
 ]

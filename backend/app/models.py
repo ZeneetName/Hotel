@@ -48,7 +48,7 @@ class CustomAuthenticationUser(AbstractUser):
 class Hotel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(CustomAuthenticationUser, on_delete=models.CASCADE, related_name='owner', verbose_name='Владелец')
-    hostel_images = models.ImageField(unique=True, verbose_name='Фотошрафии')
+    hostel_images = models.ImageField(unique=True, blank=True, null=True, verbose_name='Фотошрафии')
     title = models.CharField(max_length=128, unique=True, verbose_name='Название')
     description = models.TextField(verbose_name='Описание отеля')
     address = models.TextField(verbose_name='Адрес')
@@ -66,6 +66,9 @@ TYPE = [
 
 class Room(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=128, verbose_name='room_title')
+    max_place = models.PositiveSmallIntegerField(verbose_name='Количество мест')
+    square = models.PositiveSmallIntegerField(verbose_name='Жилая площадь')
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_room',  verbose_name='Отель')
     room_images = models.ImageField(unique=True, verbose_name='Фотограции номера')
     type  = models.CharField(choices=TYPE, verbose_name='Тип номера')
@@ -91,6 +94,8 @@ class Booking(models.Model):
         if self.check_in and self.check_out:
             day = self.check_out - self.check_in
             self.total_days = day.days
+            if self.room:
+                self.total_price = self.total_days * self.room.price_on_one_day
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -106,3 +111,4 @@ class Review(models.Model):
 
     def __str__(self):
         return f'Пользователь {self.user} отсавил отзыв: {self.text} гостинице {self.hotel}'
+

@@ -7,6 +7,8 @@ class CREATEUPDATEDELETE_FOR_OWNERAUTHORS_AND_ADMIN_HOSTEL(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
+        if not request.user or not request.user.is_authenticated:
+            return False
         return request.user.roles in ['Admin', 'Owner']
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:

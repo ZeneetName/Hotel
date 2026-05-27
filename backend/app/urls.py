@@ -4,10 +4,10 @@ from .views import AuthRegisterViewSets, HotelViewSets, ReviewViewSets, RoomView
 
 router = DefaultRouter()
 router.register('auth', AuthRegisterViewSets, 'auth')
-router.register('hostel', HotelViewSets, 'hostel')
+router.register('hotels', HotelViewSets, 'hotels')
 router.register('reviews', ReviewViewSets, 'reviews')
-router.register('room', RoomViewSets, 'room')
-router.register('booking', BookingViewSets, 'booking')
+router.register('rooms', RoomViewSets, 'rooms')
+router.register('bookings', BookingViewSets, 'bookings')
 
 
 

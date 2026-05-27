@@ -35,9 +35,16 @@ class AuthRegisterViewSets(viewsets.ModelViewSet):
             serializer = RegistrationSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
+            token, created = Token.objects.get_or_create(user=user)
             return Response({
-                'detail': 'Вы успешно зарегестрировались',
-                'user': str(user)
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'full_name': user.full_name,
+                    'roles': user.roles,
+                },
+                'token': token.key,
+                'detail': 'Вы успешно зарегистрировались'
             })
         except Exception as e:
             return Response({"error": str(e)}, status=400)
@@ -56,24 +63,29 @@ class AuthRegisterViewSets(viewsets.ModelViewSet):
             token, created = Token.objects.get_or_create(user=user)
 
             return Response({
-                'id': user.id,
-                'detail': 'Вы успешно вошли',
-                'user': str(user),
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'full_name': user.full_name,
+                    'roles': user.roles,
+                },
                 'token': token.key,
-
+                'detail': 'Вы успешно вошли',
             })
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
 
-    @action(methods=['GET'], detail=False)
-    def me(self, request):
+    @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
+    def profile(self, request):
         try:
             return Response({
-                "email": request.user.email,
-                "full_name": request.user.full_name,
-                "phone": request.user.phone,
-                "roles": request.user.roles,
+                'id': request.user.id,
+                'username': request.user.username,
+                'email': request.user.email,
+                'full_name': request.user.full_name,
+                'phone': request.user.phone,
+                'roles': request.user.roles,
             })
         except Exception as e:
             return Response({'error': str(e)})

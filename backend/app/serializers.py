@@ -1,11 +1,12 @@
 from rest_framework import serializers
 from .models import CustomAuthenticationUser, Hotel, Room, Review, Booking
+from .utils import room_is_available
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True)
-    phone = serializers.CharField(max_length=12)
+    phone = serializers.CharField(max_length=12, required=False, default="")
 
     class Meta:
         model = CustomAuthenticationUser
@@ -26,7 +27,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def validate_phone(self, value):
-        if  value[0] != '+' and value[1] != '7':
+        if not (value[0] == '+' and value[1] == '7'):
             raise serializers.ValidationError("Номер телефона должен начинаться с +7")
         if len(value) > 12:
             raise serializers.ValidationError("Номер телефона не должен превышать длину в 12 цифор")
@@ -69,8 +70,11 @@ class RoomSerializer(serializers.ModelSerializer):
             "id",
             "hotel",
             "room_images",
+            "title",
             "type",
             "price_on_one_day",
+            "max_place",
+            "square",
             "description",
             "created_at",
         ]
@@ -78,19 +82,24 @@ class RoomSerializer(serializers.ModelSerializer):
 
 
 class BookingSerializer(serializers.ModelSerializer):
+    room_title = serializers.CharField(source="room.title", read_only=True)
+    hotel_name = serializers.CharField(source="room.hotel.title", read_only=True)
+    
     class Meta:
         model = Booking
         fields = [
             "id",
             "user",
             "room",
+            "room_title",
+            "hotel_name",
             "check_in",
             "check_out",
             "total_price",
             "created_at",
             "total_days",
         ]
-        read_only_fields = ["id", "created_at", "total_price", "total_days", "room", "user"]
+        read_only_fields = ["id", "created_at", "total_price", "total_days", "room", "user", "room_title", "hotel_name"]
 
     def validate(self, attrs):
         check_in = attrs.get("check_in") or getattr(self.instance, "check_in", None)
@@ -102,7 +111,6 @@ class BookingSerializer(serializers.ModelSerializer):
                 )
             room = self.context.get("room")
             if room is not None:
-                from .utils import room_is_available
                 if not room_is_available(room, check_in, check_out):
                     raise serializers.ValidationError(
                         "Номер уже забронирован на выбранные даты"
