@@ -1,29 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ОтельЧайка</title>
-    <link rel="stylesheet" href="styles.css" />
-    <script src="api.js"></script>
-    <script src="main.js"></script>
-</head>
-<body>
-<div class="bg-photo" aria-hidden="true"></div>
-  <div class="bg-overlay" aria-hidden="true"></div>
-  <header class="topbar">
-      <a href="#" class="logo" data-nav="hotels">ОтельЧайка</a>
-      <nav class="nav-links">
-        <button type="button" class="linklike" data-nav="hotels">Отели</button>
-        <button type="button" class="linklike" data-nav="bookings">Мои бронирования</button>
-        <button type="button" class="linklike" data-nav="profile">Профиль</button>
-        <button type="button" class="linklike btn-nav" data-nav="auth" id="nav-auth">Вход</button>
-    </nav>
-  </header>
-
-  <main id="app"></main>
-
-  <div id="toast" class="toast" hidden></div>
-
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Hotel Booking</title>
+        <link rel="stylesheet" href="static/css.css" />
+        <script type="module" src="main.js"></script>
+    </head>
+    <body>
+        <header class="header">
+            <div class="header-left">
+                <span class="site-title">Booking</span>
+            </div>
+            <div class="header-right">
+                <button class="btn my-bookings" style="display: none">
+                    Мои бронирования
+                </button>
+                <button class="btn profile" style="display: none">
+                    Профиль
+                </button>
+                <button class="btn login">Вход</button>
+            </div>
+        </header>
+        <main>
+            <section class="hotels-section">
+                <h1>Список гостиниц</h1>
+                <div class="hotels-list"></div>
+            </section>
+            <section class="auth-section" style="display: none"></section>
+            <section class="profile-section" style="display: none"></section>
+            <section class="bookings-section" style="display: none"></section>
+            <section class="hotel-detail-section" style="display: none"></section>
+        </main>
+        <button class="btn create-hotel-btn" style="display: none">+ Добавить жильё</button>
+        <div class="modal" style="display: none"></div>
+        <script type="module" src="main.js"></script>
+    </body>
 </html>

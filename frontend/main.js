@@ -1,1253 +1,435 @@
-/* global AuthApi, HotelApi, RoomApi, BookingApi, ReviewApi, getToken, setToken, getUserId, setUserId, mediaUrl, API */
+import API from "./api.js";
 
-const ROLE_LABEL = {
-    Default_user: "Пользователь",
-    Owner: "Владелец",
-    Admin: "Директор",
-};
+const hotelsList = document.querySelector(".hotels-list");
+const authSection = document.querySelector(".auth-section");
+const profileSection = document.querySelector(".profile-section");
+const bookingsSection = document.querySelector(".bookings-section");
+const hotelDetailSection = document.querySelector(".hotel-detail-section");
+const header = document.querySelector(".header");
+const btnLogin = document.querySelector(".login");
+const btnProfile = document.querySelector(".profile");
+const btnBookings = document.querySelector(".my-bookings");
+const btnCreateHotel = document.querySelector(".create-hotel-btn");
+const modal = document.querySelector(".modal");
 
-const ROOM_TYPE_LABEL = {
-    standard: "Стандартный номер",
-    deluxe: "Люксовый номер",
-};
-
-let state = {
-    route: "hotels",
-    hotelId: null,
-    profile: null,
-    hotels: [],
-    roomsCache: {},
-    search: {
-        city: "",
-        check_in: "",
-        check_out: "",
-    },
-};
-
-function showToast(msg) {
-    const el = document.getElementById("toast");
-    el.textContent = msg;
-    el.hidden = false;
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => {
-        el.hidden = true;
-    }, 3200);
+function showSection(section) {
+    [authSection, profileSection, bookingsSection, hotelDetailSection].forEach(
+        (s) => (s.style.display = "none"),
+    );
+    const hotelsSection = document.querySelector(".hotels-section");
+    hotelsSection.style.display = (section === hotelDetailSection || section === authSection || section === profileSection || section === bookingsSection) ? "none" : "block";
+    section.style.display = "block";
+}
+function hideAllSections() {
+    [authSection, profileSection, bookingsSection, hotelDetailSection].forEach(
+        (s) => (s.style.display = "none"),
+    );
+    document.querySelector(".hotels-section").style.display = "block";
+}
+function showModal(html) {
+    modal.innerHTML = `<div class="modal-content">${html}</div>`;
+    modal.style.display = "flex";
+}
+function hideModal() {
+    modal.style.display = "none";
 }
 
-function roleClass(role) {
-    if (role === "Admin") return "badge-admin";
-    if (role === "Owner") return "badge-owner";
-    return "badge-buyer";
+function setHeaderAuth(isAuth) {
+    btnLogin.style.display = isAuth ? "none" : "inline-block";
+    btnProfile.style.display = isAuth ? "inline-block" : "none";
+    btnBookings.style.display = isAuth ? "inline-block" : "none";
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const canCreate = isAuth && user && (user.roles === "Admin" || user.roles === "Owner");
+    btnCreateHotel.style.display = canCreate ? "block" : "none";
 }
 
-function initials(name) {
-    if (!name) return "?";
-    const p = String(name).trim().split(/\s+/);
-    return (p[0][0] + (p[1]?.[0] || "")).toUpperCase();
+function getUser() {
+    return localStorage.getItem("token")
+        ? JSON.parse(localStorage.getItem("user") || "{}")
+        : null;
 }
-
-async function loadProfile() {
-    if (!getToken()) {
-        state.profile = null;
-        return null;
-    }
-    try {
-        state.profile = await AuthApi.me();
-        return state.profile;
-    } catch {
-        state.profile = null;
-        return null;
+function setUser(user, token) {
+    if (user && token) {
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("token", token);
     }
 }
-
-function updateAuthNav() {
-    const btn = document.getElementById("nav-auth");
-    if (!btn) return;
-    btn.textContent = getToken() ? "Выйти" : "Вход";
+function logout() {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setHeaderAuth(false);
+    renderHotels();
 }
 
-function navigate(route, id = null) {
-    state.route = route;
-    state.hotelId = id;
-    const h = id ? `${route}:${id}` : route;
-    if (window.location.hash !== `#${h}`) window.location.hash = h;
-    render();
-}
-
-function parseHash() {
-    const raw = (window.location.hash || "#/hotels").replace(/^#/, "");
-    const [route, id] = raw.split(":");
-    const map = {
-        hotels: "hotels",
-        hotel: "hotel",
-        auth: "auth",
-        profile: "profile",
-        bookings: "bookings",
-    };
-    state.route = map[route] || "hotels";
-    state.hotelId = id || null;
-}
-
-async function ensureProfile() {
-    if (!state.profile && getToken()) await loadProfile();
-}
-
-function isOwnerOrAdmin() {
-    const r = state.profile && state.profile.roles;
-    return r === "Owner" || r === "Admin";
-}
-
-function isAdmin() {
-    return state.profile && state.profile.roles === "Admin";
-}
-
-function isDefaultUser() {
-    return state.profile && state.profile.roles === "Default_user";
-}
-
-function canManageHotel(hotel) {
-    if (!state.profile || !hotel) return false;
-    if (state.profile.roles === "Admin") return true;
-    const uid = getUserId();
-    if (
-        state.profile.roles === "Owner" &&
-        uid &&
-        String(hotel.owner) === String(uid)
-    )
-        return true;
-    return false;
-}
-
-function nightsBetween(checkIn, checkOut) {
-    const a = new Date(checkIn);
-    const b = new Date(checkOut);
-    const ms = b - a;
-    return Math.max(0, Math.round(ms / 86400000));
-}
-
-function computeStayPrice(pricePerDay, checkIn, checkOut) {
-    const n = nightsBetween(checkIn, checkOut);
-    return n * Number(pricePerDay || 0);
-}
-
-function cleanupOverlays() {
-    document.querySelectorAll("#hotel-form-modal").forEach((el) => el.remove());
-    document.querySelectorAll(".modal-overlay.open").forEach((el) => {
-        el.classList.remove("open");
-        el.innerHTML = "";
-        if (!el.id || el.id === "booking-modal-root") el.className = "";
-    });
-    document.querySelectorAll(".drawer-overlay.open").forEach((el) => {
-        el.classList.remove("open");
-    });
-}
-
-function render() {
-    cleanupOverlays();
-    updateAuthNav();
-    const app = document.getElementById("app");
-    if (!app) return;
-
-    if (!getToken() && ["profile", "bookings"].includes(state.route)) {
-        state.route = "auth";
-    }
-
-    if (state.route === "auth") {
-        app.innerHTML = renderAuthPage();
-        bindAuthPage();
-        return;
-    }
-    if (state.route === "profile") {
-        renderProfilePage(app);
-        return;
-    }
-    if (state.route === "bookings") {
-        renderBookingsPage(app);
-        return;
-    }
-    if (state.route === "hotel" && state.hotelId) {
-        renderHotelDetail(app);
-        return;
-    }
-    renderHotelsList(app);
-}
-
-function renderAuthPage() {
-    return `
-    <div class="auth-wrap">
-      <div class="auth-card">
-        <div class="auth-tabs">
-          <button type="button" data-tab="login" class="active">Вход</button>
-          <button type="button" data-tab="register">Регистрация</button>
+// --- Аутентификация ---
+function renderAuthForm() {
+    showSection(authSection);
+    authSection.innerHTML = `
+        <div class="auth-form">
+            <h2>Вход</h2>
+            <input type="email" class="auth-email" placeholder="Email">
+            <input type="password" class="auth-password" placeholder="Пароль">
+            <button class="btn auth-login">Войти</button>
+            <p>Нет аккаунта? <a href="#" class="to-register">Зарегистрироваться</a></p>
         </div>
-        <form id="form-login" class="auth-form">
-          <div class="field"><label>Email</label><input class="input-line" name="email" type="email" required autocomplete="username" /></div>
-          <div class="field"><label>Пароль</label><input class="input-line" name="password" type="password" required autocomplete="current-password" /></div>
-          <button class="btn btn-primary btn-block" type="submit">Войти</button>
-        </form>
-        <form id="form-register" class="auth-form hidden">
-          <div class="field"><label>Email</label><input class="input-line" name="email" type="email" required /></div>
-          <div class="field"><label>Полное имя</label><input class="input-line" name="full_name" required /></div>
-          <div class="field"><label>Телефон (+7…)</label><input class="input-line" name="phone" placeholder="+79991234567" required /></div>
-          <div class="field"><label>Пароль</label><input class="input-line" name="password" type="password" minlength="6" required /></div>
-          <button class="btn btn-primary btn-block" type="submit">Зарегистрироваться</button>
-        </form>
-        <div class="api-hint">
-          <strong>Адрес API</strong> — в Docker: <code>http://localhost</code> (nginx проксирует <code>/api</code>).
-          Локально: <code>http://127.0.0.1:8000</code>.
-          <div class="field field-compact">
-            <input class="input-line" id="api-origin" type="url" placeholder="авто" value="${API.origin.replace(/"/g, "&quot;")}" autocomplete="off" />
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
-
-function bindAuthPage() {
-    const tabs = document.querySelectorAll(".auth-tabs button");
-    const formLogin = document.getElementById("form-login");
-    const formReg = document.getElementById("form-register");
-    tabs.forEach((t) => {
-        t.addEventListener("click", () => {
-            tabs.forEach((x) => x.classList.remove("active"));
-            t.classList.add("active");
-            const tab = t.getAttribute("data-tab");
-            formLogin.classList.toggle("hidden", tab !== "login");
-            formReg.classList.toggle("hidden", tab !== "register");
-        });
-    });
-
-    const apiOriginInput = document.getElementById("api-origin");
-    const syncApiField = () => {
-        API.origin = apiOriginInput.value;
-        apiOriginInput.value = API.origin;
-    };
-    apiOriginInput.addEventListener("change", syncApiField);
-    apiOriginInput.addEventListener("blur", syncApiField);
-
-    formLogin.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const fd = new FormData(formLogin);
+    `;
+    authSection.querySelector(".auth-login").onclick = async () => {
+        const email = authSection.querySelector(".auth-email").value;
+        const password = authSection.querySelector(".auth-password").value;
         try {
-            const data = await AuthApi.login({
-                email: fd.get("email"),
-                password: fd.get("password"),
-            });
-            if (data && data.token) {
-                setToken(data.token);
-                setUserId(data.id);
-                await loadProfile();
-                showToast(data.detail || "Вход выполнен");
-                navigate("hotels");
-            } else {
-                showToast(typeof data === "string" ? data : "Ошибка входа");
-            }
-        } catch (err) {
-            showToast(err.message || "Ошибка");
-        }
-    });
-
-    formReg.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const fd = new FormData(formReg);
-        try {
-            const data = await AuthApi.register({
-                email: fd.get("email"),
-                full_name: fd.get("full_name"),
-                phone: fd.get("phone"),
-                password: fd.get("password"),
-            });
-            showToast((data && data.detail) || "Регистрация ок");
-            tabs[0].click();
-        } catch (err) {
-            showToast(err.message || "Ошибка регистрации");
-        }
-    });
-}
-
-async function renderProfilePage(app) {
-    app.innerHTML = `<p class="text-muted">Загрузка…</p>`;
-    await loadProfile();
-    if (!state.profile) {
-        navigate("auth");
-        return;
-    }
-    const p = state.profile;
-    app.innerHTML = `
-    <div class="page-head">
-      <h1 class="page-title">Профиль</h1>
-      <p class="page-sub">Данные аккаунта и роль в системе.</p>
-    </div>
-    <div class="profile-layout">
-      <div class="avatar-block profile-sidebar glass">
-        <div class="avatar">${initials(p.full_name)}</div>
-        <div class="profile-name">${escapeHtml(p.full_name)}</div>
-        <span class="badge ${roleClass(p.roles)}">[${ROLE_LABEL[p.roles] || p.roles}]</span>
-      </div>
-      <div class="info-cards">
-        <div class="mini-card" data-card="email">
-          <header><span>Email</span><button type="button" class="linklike js-edit-card">Изменить</button></header>
-          <div class="js-view">${escapeHtml(p.email)}</div>
-          <div class="js-edit hidden"><p class="text-muted">На бэкенде нет PATCH для профиля — только просмотр.</p></div>
-        </div>
-        <div class="mini-card" data-card="phone">
-          <header><span>Телефон</span><button type="button" class="linklike js-edit-card">Изменить</button></header>
-          <div class="js-view">${escapeHtml(p.phone)}</div>
-          <div class="js-edit hidden"><p class="text-muted">Сохранение не подключено к API.</p></div>
-        </div>
-      </div>
-    </div>`;
-
-    app.querySelectorAll(".js-edit-card").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            const card = btn.closest(".mini-card");
-            card.querySelector(".js-view").classList.toggle("hidden");
-            card.querySelector(".js-edit").classList.toggle("hidden");
-        });
-    });
-}
-
-function escapeHtml(s) {
-    return String(s)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-}
-
-function todayIso() {
-    return new Date().toISOString().slice(0, 10);
-}
-
-function renderHotelSearchBar() {
-    const s = state.search;
-    return `
-    <form id="hotel-search-form" class="search-bar card">
-      <div class="search-bar-grid">
-        <div class="field">
-          <label for="search-city">Город</label>
-          <input class="input-line" id="search-city" name="city" type="text" placeholder="Например, Москва" value="${escapeHtml(s.city)}" />
-        </div>
-        <div class="field">
-          <label for="search-check-in">Заезд</label>
-          <input class="input-line" id="search-check-in" name="check_in" type="date" min="${todayIso()}" value="${escapeHtml(s.check_in)}" />
-        </div>
-        <div class="field">
-          <label for="search-check-out">Выезд</label>
-          <input class="input-line" id="search-check-out" name="check_out" type="date" min="${todayIso()}" value="${escapeHtml(s.check_out)}" />
-        </div>
-        <div class="search-bar-actions">
-          <button type="submit" class="btn btn-primary">Найти</button>
-          <button type="button" class="btn btn-quiet" id="search-reset">Сбросить</button>
-        </div>
-      </div>
-      <p class="text-muted search-hint">Показываются отели со свободными номерами на выбранные даты.</p>
-    </form>`;
-}
-
-function bindHotelSearchForm(app) {
-    const form = document.getElementById("hotel-search-form");
-    if (!form) return;
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const fd = new FormData(form);
-        const checkIn = fd.get("check_in");
-        const checkOut = fd.get("check_out");
-        if ((checkIn && !checkOut) || (!checkIn && checkOut)) {
-            showToast("Укажите обе даты: заезд и выезд");
-            return;
-        }
-        if (checkIn && checkOut && checkOut <= checkIn) {
-            showToast("Дата выезда должна быть позже заезда");
-            return;
-        }
-        state.search = {
-            city: String(fd.get("city") || "").trim(),
-            check_in: checkIn || "",
-            check_out: checkOut || "",
-        };
-        await loadAndPaintHotels(app);
-    });
-
-    const resetBtn = document.getElementById("search-reset");
-    if (resetBtn) {
-        resetBtn.addEventListener("click", () => {
-            state.search = { city: "", check_in: "", check_out: "" };
-            renderHotelsList(app);
-        });
-    }
-}
-
-function bindAddHotelButton(app) {
-    const addHotelBtn = document.getElementById("btn-add-hotel");
-    if (!addHotelBtn) return;
-    addHotelBtn.addEventListener("click", () => openHotelModal(null));
-}
-
-function bindAddRoomButton(app, hotelId) {
-    const addRoomBtn = document.getElementById("btn-add-room");
-    if (!addRoomBtn) return;
-    addRoomBtn.addEventListener("click", () => openRoomDrawer(hotelId));
-}
-
-async function loadAndPaintHotels(app) {
-    const grid = document.getElementById("hotel-grid");
-    if (grid) grid.innerHTML = `<p class="text-muted">Загрузка…</p>`;
-
-    const params = {};
-    if (state.search.city) params.city = state.search.city;
-    if (state.search.check_in && state.search.check_out) {
-        params.check_in = state.search.check_in;
-        params.check_out = state.search.check_out;
-    }
-
-    try {
-        state.hotels = await HotelApi.list(params);
-        if (!Array.isArray(state.hotels)) state.hotels = [];
-    } catch (e) {
-        if (grid) {
-            grid.innerHTML = `<div class="error-panel" role="alert">${escapeHtml(e.message)}</div>`;
-        }
-        return;
-    }
-    paintHotelGrid(app);
-}
-
-function paintHotelGrid(app) {
-    const grid = document.getElementById("hotel-grid");
-    if (!grid) return;
-
-    if (!state.hotels.length) {
-        const hint =
-            state.search.city || state.search.check_in
-                ? "По вашему запросу нет отелей со свободными номерами. Измените город или даты."
-                : "Отелей пока нет.";
-        grid.innerHTML = `<p class="text-muted">${hint}</p>`;
-        return;
-    }
-
-    grid.innerHTML = state.hotels
-        .map((h) => {
-            const rating =
-                h.rating != null && h.rating > 0
-                    ? Number(h.rating).toFixed(1)
-                    : "—";
-            const manage = canManageHotel(h);
-            const actions = manage
-                ? `<div class="hotel-actions">
-          <button type="button" class="btn-icon js-hotel-edit" data-id="${h.id}" title="Редактировать">✎</button>
-          <button type="button" class="btn-icon js-hotel-del" data-id="${h.id}" title="Удалить">🗑</button>
-        </div>`
-                : "";
-            const cityLine = h.city
-                ? `<p class="hotel-city">${escapeHtml(h.city)}</p>`
-                : "";
-            return `
-        <article class="hotel-card" data-id="${h.id}">
-          ${actions}
-          <img src="${escapeHtml(mediaUrl(h.hostel_images))}" alt="" loading="lazy" onerror="this.style.opacity=0.3" />
-          <div class="hotel-card-body">
-            <h3>${escapeHtml(h.title)}</h3>
-            ${cityLine}
-            <div class="rating-pill">★ ${rating}</div>
-          </div>
-        </article>`;
-        })
-        .join("");
-
-    grid.querySelectorAll(".hotel-card").forEach((card) => {
-        card.addEventListener("click", (ev) => {
-            if (ev.target.closest(".btn-icon")) return;
-            navigate("hotel", card.getAttribute("data-id"));
-        });
-    });
-    grid.querySelectorAll(".js-hotel-edit").forEach((b) => {
-        b.addEventListener("click", (e) => {
-            e.stopPropagation();
-            openHotelModal(b.getAttribute("data-id"));
-        });
-    });
-    grid.querySelectorAll(".js-hotel-del").forEach((b) => {
-        b.addEventListener("click", async (e) => {
-            e.stopPropagation();
-            if (!confirm("Удалить отель?")) return;
-            try {
-                await HotelApi.remove(b.getAttribute("data-id"));
-                showToast("Удалено");
-                await loadAndPaintHotels(app);
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
-    });
-}
-
-async function renderHotelsList(app) {
-    await ensureProfile();
-
-    const addBtn = isOwnerOrAdmin()
-        ? `<div class="toolbar"><button type="button" class="btn btn-quiet" id="btn-add-hotel">+ Добавить отель</button></div>`
-        : "";
-
-    app.innerHTML = `
-    <div class="page-head">
-      <h1 class="page-title">Отели</h1>
-      <p class="page-sub">Найдите отель по городу и свободным датам.</p>
-    </div>
-    ${renderHotelSearchBar()}
-    ${addBtn}
-    <div class="grid-hotels" id="hotel-grid"><p class="text-muted">Загрузка…</p></div>`;
-
-    bindHotelSearchForm(app);
-    bindAddHotelButton(app);
-
-    try {
-        await loadAndPaintHotels(app);
-    } catch (e) {
-        app.innerHTML = `
-      <div class="page-head">
-        <h1 class="page-title">Отели</h1>
-        <p class="page-sub">Каталог гостиниц и номеров.</p>
-      </div>
-      ${renderHotelSearchBar()}
-      <div class="error-panel" role="alert">${escapeHtml(e.message)}</div>
-      <p class="text-muted" style="margin-top:1rem;">Локально: API <code>http://127.0.0.1:8000</code>.</p>`;
-        bindHotelSearchForm(app);
-    }
-}
-
-function ensureModalOverlay(id) {
-    let overlay = document.getElementById(id);
-    if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.id = id;
-        document.body.appendChild(overlay);
-    }
-    return overlay;
-}
-
-function openHotelModal(hotelId) {
-    const overlay = ensureModalOverlay("hotel-form-modal");
-    const hotel = hotelId ? state.hotels.find((x) => x.id === hotelId) : null;
-    overlay.className = "modal-overlay open";
-    overlay.innerHTML = `
-    <div class="modal">
-      <h2>${hotel ? "Редактировать отель" : "Новый отель"}</h2>
-      <form id="hotel-form">
-        <input type="hidden" name="id" value="${hotel ? hotel.id : ""}" />
-        <div class="field"><label>Название</label><input class="input-line" name="title" required value="${hotel ? escapeHtml(hotel.title) : ""}" ${hotel ? "readonly" : ""} /></div>
-        <div class="field"><label>Город</label><input class="input-line" name="city" required value="${hotel ? escapeHtml(hotel.city || "") : ""}" placeholder="Москва" /></div>
-        <div class="field"><label>Адрес</label><input class="input-line" name="address" required value="${hotel ? escapeHtml(hotel.address) : ""}" /></div>
-        <div class="field"><label>Описание</label><textarea class="textarea-input" name="description" rows="3">${hotel ? escapeHtml(hotel.description) : ""}</textarea></div>
-        <div class="field"><label>Фото ${hotel ? "(оставьте пустым, чтобы не менять)" : ""}</label><input type="file" name="hostel_images" accept="image/*" ${hotel ? "" : "required"} /></div>
-        <div class="row-actions">
-          <button type="button" class="btn btn-quiet" id="hotel-form-cancel">Отмена</button>
-          <button type="submit" class="btn btn-primary mt-0">Сохранить</button>
-        </div>
-      </form>
-    </div>`;
-
-    const close = () => {
-        overlay.classList.remove("open");
-        overlay.innerHTML = "";
-        overlay.remove();
-    };
-    overlay.onclick = (e) => {
-        if (e.target === overlay) close();
-    };
-    document
-        .getElementById("hotel-form-cancel")
-        .addEventListener("click", close);
-
-    document
-        .getElementById("hotel-form")
-        .addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.target);
-            try {
-                if (hotel) {
-                    if (
-                        !fd.get("hostel_images") ||
-                        !fd.get("hostel_images").size
-                    )
-                        fd.delete("hostel_images");
-                    await HotelApi.update(hotel.id, fd);
-                } else {
-                    await HotelApi.create(fd);
-                }
-                showToast("Сохранено");
-                close();
-                const app = document.getElementById("app");
-                renderHotelsList(app);
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
-}
-
-async function renderHotelDetail(app) {
-    const id = state.hotelId;
-    app.innerHTML = `<p class="text-muted">Загрузка…</p>`;
-    await ensureProfile();
-    let hotel;
-    try {
-        hotel = await HotelApi.get(id);
-    } catch (e) {
-        app.innerHTML = `<p>Отель не найден. <button type="button" class="linklike" data-nav="hotels">К списку</button></p>`;
-        app.querySelector("[data-nav]").addEventListener("click", () =>
-            navigate("hotels"),
-        );
-        return;
-    }
-
-    const roomParams = {};
-    if (state.search.check_in && state.search.check_out) {
-        roomParams.check_in = state.search.check_in;
-        roomParams.check_out = state.search.check_out;
-    }
-
-    let roomsRes;
-    try {
-        roomsRes = await HotelApi.listRooms(id, roomParams);
-    } catch {
-        roomsRes = { data: [] };
-    }
-    const rooms = roomsRes.data || roomsRes.results || roomsRes || [];
-    const roomList = Array.isArray(rooms) ? rooms : [];
-
-    let revRes;
-    try {
-        revRes = await HotelApi.listReviews(id);
-    } catch {
-        revRes = { data: [] };
-    }
-    const reviews = revRes.data || [];
-
-    const rating =
-        hotel.rating != null && hotel.rating > 0
-            ? Number(hotel.rating).toFixed(1)
-            : "—";
-    const manage = canManageHotel(hotel);
-    const addRoomBtn = manage
-        ? `<div class="hotels-toolbar"><button type="button" class="btn btn-quiet" id="btn-add-room">+ Добавить номер</button></div>`
-        : "";
-
-    app.innerHTML = `
-    <p><button type="button" class="linklike" id="back-hotels">← К отелям</button></p>
-    <div class="page-head">
-      <h1 class="page-title">${escapeHtml(hotel.title)} <span class="rating-pill">★ ${rating}</span></h1>
-      <p class="page-sub">${hotel.city ? `${escapeHtml(hotel.city)} · ` : ""}${escapeHtml(hotel.address)}</p>
-    </div>
-    <div class="detail-hero">
-      <img src="${escapeHtml(mediaUrl(hotel.hostel_images))}" alt="" onerror="this.style.display='none'" />
-      <p class="text-muted detail-desc">${escapeHtml(hotel.description)}</p>
-    </div>
-    <h2 class="section-label"><span>Номера</span></h2>
-    ${addRoomBtn}
-    <div id="rooms-list"></div>
-    <h2 class="section-label"><span>Отзывы</span></h2>
-    <div id="reviews-block"></div>
-    <div id="drawer-root"></div>
-    <div id="booking-modal-root"></div>`;
-
-    document
-        .getElementById("back-hotels")
-        .addEventListener("click", () => navigate("hotels"));
-
-    const roomsEl = document.getElementById("rooms-list");
-    if (!roomList.length) {
-        const noRoomsMsg =
-            state.search.check_in && state.search.check_out
-                ? "На выбранные даты свободных номеров нет."
-                : "Номеров пока нет.";
-        roomsEl.innerHTML = `<p class="text-muted">${noRoomsMsg}</p>`;
-    } else
-        roomsEl.innerHTML = roomList
-            .map((r) => {
-                const typeLabel = ROOM_TYPE_LABEL[r.type] || r.type;
-                const bookBtn = isDefaultUser()
-                    ? `<button type="button" class="btn btn-quiet js-book" data-room="${r.id}" data-price="${r.price_on_one_day}">Забронировать</button>`
-                    : "";
-                const rowManage = manage
-                    ? `<span>
-          <button type="button" class="linklike js-room-edit" data-room="${r.id}">Изменить</button>
-          <button type="button" class="linklike js-room-del" data-room="${r.id}">Удалить</button>
-        </span>`
-                    : "";
-                return `
-        <div class="room-row" data-room="${r.id}">
-          <img src="${escapeHtml(mediaUrl(r.room_images))}" alt="" />
-          <div>
-            <strong>${escapeHtml(typeLabel)}</strong>
-            <div class="room-meta">${escapeHtml(r.description || "")}</div>
-            ${rowManage}
-          </div>
-          <div class="room-price">${Number(r.price_on_one_day).toLocaleString("ru-RU")} ₽ / ночь<br>${bookBtn}</div>
-        </div>`;
-            })
-            .join("");
-
-    if (!roomList.length) {
-        renderReviewsBlock(
-            document.getElementById("reviews-block"),
-            reviews,
-            id,
-        );
-        return;
-    }
-
-    roomsEl.querySelectorAll(".js-book").forEach((b) => {
-        b.addEventListener("click", () =>
-            openBookingModal(
-                b.getAttribute("data-room"),
-                b.getAttribute("data-price"),
-                hotel.title,
-            ),
-        );
-    });
-    roomsEl.querySelectorAll(".js-room-del").forEach((b) => {
-        b.addEventListener("click", async (ev) => {
-            ev.stopPropagation();
-            if (!confirm("Удалить номер?")) return;
-            try {
-                await RoomApi.remove(b.getAttribute("data-room"));
-                showToast("Номер удалён");
-                renderHotelDetail(app);
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
-    });
-    roomsEl.querySelectorAll(".js-room-edit").forEach((b) => {
-        b.addEventListener("click", (ev) => {
-            ev.stopPropagation();
-            const rid = b.getAttribute("data-room");
-            const room = roomList.find((x) => x.id === rid);
-            openRoomEditModal(room, id);
-        });
-    });
-
-    bindAddRoomButton(app, id);
-
-    renderReviewsBlock(document.getElementById("reviews-block"), reviews, id);
-}
-
-function openRoomDrawer(hotelId) {
-    const root = document.getElementById("drawer-root");
-    root.innerHTML = `
-    <div class="drawer-overlay" id="drawer-ov"></div>
-    <aside class="drawer" id="drawer-panel">
-      <h2>Новый номер</h2>
-      <form id="room-create-form">
-        <div class="field"><label>Тип</label>
-          <select class="select-input" name="type">
-            <option value="standard">Стандарт</option>
-            <option value="deluxe">Люкс</option>
-          </select>
-        </div>
-        <div class="field"><label>Цена за ночь</label><input class="input-line" name="price_on_one_day" type="number" min="1" required /></div>
-        <div class="field"><label>Описание</label><textarea class="textarea-input" name="description" rows="3"></textarea></div>
-        <div class="field"><label>Фото</label><input type="file" name="room_images" accept="image/*" required /></div>
-        <button type="submit" class="btn btn-primary btn-block">Сохранить</button>
-      </form>
-    </aside>`;
-    requestAnimationFrame(() => {
-        document.getElementById("drawer-ov").classList.add("open");
-        document.getElementById("drawer-panel").classList.add("open");
-    });
-
-    const close = () => {
-        document.getElementById("drawer-ov").classList.remove("open");
-        document.getElementById("drawer-panel").classList.remove("open");
-        setTimeout(() => {
-            root.innerHTML = "";
-        }, 220);
-    };
-    document.getElementById("drawer-ov").addEventListener("click", close);
-
-    document
-        .getElementById("room-create-form")
-        .addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.target);
-            try {
-                await HotelApi.createRoom(hotelId, fd);
-                showToast("Номер добавлен");
-                close();
-                renderHotelDetail(document.getElementById("app"));
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
-}
-
-function openRoomEditModal(room, hotelId) {
-    const overlay = document.getElementById("booking-modal-root");
-    overlay.className = "modal-overlay open";
-    overlay.innerHTML = `
-    <div class="modal">
-      <h2>Редактировать номер</h2>
-      <form id="room-patch-form">
-        <div class="field"><label>Цена за ночь</label><input class="input-line" name="price_on_one_day" type="number" value="${room.price_on_one_day}" required /></div>
-        <div class="field"><label>Описание</label><textarea class="textarea-input" name="description" rows="3">${escapeHtml(room.description || "")}</textarea></div>
-        <div class="field"><label>Новое фото (необязательно)</label><input type="file" name="room_images" accept="image/*" /></div>
-        <div class="row-actions">
-          <button type="button" class="btn btn-quiet" id="rm-close">Закрыть</button>
-          <button type="submit" class="btn btn-primary mt-0">Сохранить</button>
-        </div>
-      </form>
-    </div>`;
-    const close = () => {
-        overlay.classList.remove("open");
-        overlay.innerHTML = "";
-        overlay.className = "";
-    };
-    overlay.onclick = (e) => {
-        if (e.target === overlay) close();
-    };
-    document.getElementById("rm-close").addEventListener("click", close);
-    document
-        .getElementById("room-patch-form")
-        .addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const fd = new FormData(e.target);
-            if (!fd.get("room_images") || !fd.get("room_images").size)
-                fd.delete("room_images");
-            try {
-                await RoomApi.update(room.id, fd);
-                showToast("Сохранено");
-                close();
-                renderHotelDetail(document.getElementById("app"));
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
-}
-
-function openBookingModal(roomId, pricePerDay, hotelTitle) {
-    const root = document.getElementById("booking-modal-root");
-    root.className = "modal-overlay open";
-    root.innerHTML = `
-    <div class="modal">
-      <h2>Бронирование</h2>
-      <p class="text-muted">${escapeHtml(hotelTitle)}</p>
-      <div class="field"><label>Заезд</label><input class="input-line" type="date" id="bk-in" required /></div>
-      <div class="field"><label>Выезд</label><input class="input-line" type="date" id="bk-out" required /></div>
-      <div class="price-big" id="bk-price">Выберите даты</div>
-      <button type="button" class="btn btn-primary btn-block" id="bk-confirm">Подтвердить</button>
-      <button type="button" class="btn btn-quiet btn-full" id="bk-cancel">Отмена</button>
-    </div>`;
-
-    const priceEl = document.getElementById("bk-price");
-    const inEl = document.getElementById("bk-in");
-    const outEl = document.getElementById("bk-out");
-    if (state.search.check_in) inEl.value = state.search.check_in;
-    if (state.search.check_out) outEl.value = state.search.check_out;
-
-    const refreshPrice = async () => {
-        const cin = inEl.value;
-        const cout = outEl.value;
-        if (!cin || !cout) {
-            priceEl.textContent = "Выберите даты";
-            return;
-        }
-        const n = nightsBetween(cin, cout);
-        if (n <= 0) {
-            priceEl.textContent = "Дата выезда должна быть позже заезда";
-            return;
-        }
-        priceEl.textContent = "Расчёт…";
-        try {
-            await BookingApi.finalPrice();
+            const data = await API.login(email, password);
+            setUser(data.user, data.token);
+            setHeaderAuth(true);
+            hideAllSections();
+            renderHotels();
         } catch {
-            /* бэкенд не считает по датам — игнорируем */
+            alert("Ошибка входа");
         }
-        const total = computeStayPrice(pricePerDay, cin, cout);
-        priceEl.textContent = `${total.toLocaleString("ru-RU")} ₽`;
     };
-    inEl.addEventListener("change", refreshPrice);
-    outEl.addEventListener("change", refreshPrice);
-
-    const close = () => {
-        root.classList.remove("open");
-        root.innerHTML = "";
-        root.className = "";
+    authSection.querySelector(".to-register").onclick = (e) => {
+        e.preventDefault();
+        renderRegisterForm();
     };
-    document.getElementById("bk-cancel").addEventListener("click", close);
-    root.onclick = (e) => {
-        if (e.target === root) close();
-    };
-
-    document
-        .getElementById("bk-confirm")
-        .addEventListener("click", async () => {
-            try {
-                await RoomApi.createBooking(roomId, {
-                    check_in: inEl.value,
-                    check_out: outEl.value,
-                });
-                showToast("Бронирование создано");
-                close();
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
 }
-
-function renderReviewsBlock(container, reviews, hotelId) {
-    const uid = getUserId();
-    const role = state.profile && state.profile.roles;
-    let reviewForm = "";
-    if (isDefaultUser()) {
-        reviewForm = `
-      <button type="button" class="btn btn-quiet" id="toggle-review">Оставить отзыв</button>
-      <div id="review-form-wrap" class="hidden panel-nested">
-        <div class="stars-input" id="stars-input">${[1, 2, 3, 4, 5].map((i) => `<span data-s="${i}">★</span>`).join("")}</div>
-        <div id="review-text-wrap" class="hidden">
-          <textarea class="textarea-input" id="review-text" rows="3" placeholder="Комментарий"></textarea>
-          <button type="button" class="btn btn-primary btn-block" id="review-submit">Отправить</button>
+function renderRegisterForm() {
+    showSection(authSection);
+    authSection.innerHTML = `
+        <div class="auth-form">
+            <h2>Регистрация</h2>
+            <input type="email" class="reg-email" placeholder="Email">
+            <input type="password" class="reg-password" placeholder="Пароль">
+            <input type="text" class="reg-fullname" placeholder="Полное имя">
+            <input type="text" class="reg-phone" placeholder="Телефон (+7...)">
+            <button class="btn auth-register">Зарегистрироваться</button>
+            <p>Есть аккаунт? <a href="#" class="to-login">Войти</a></p>
         </div>
-      </div>`;
-    }
-
-    container.innerHTML = `
-    ${reviewForm}
-    <div class="reviews-list">${reviews
-        .map((rev) => {
-            const mine = uid && String(rev.user) === String(uid);
-            let actions = "";
-            if (mine && isDefaultUser()) {
-                actions = `<div class="review-actions">
-            <button type="button" class="js-rev-edit" data-id="${rev.id}">Редактировать</button>
-            <button type="button" class="js-rev-del" data-id="${rev.id}">Удалить</button>
-          </div>`;
-            } else if (role === "Admin") {
-                actions = `<div class="review-actions"><button type="button" class="js-rev-del" data-id="${rev.id}" title="Удалить">🗑 Удалить</button></div>`;
-            }
-            return `<div class="review-card">
-          <div>★ ${rev.score} <span class="text-muted">${escapeHtml(String(rev.created_at || ""))}</span></div>
-          <p>${escapeHtml(rev.comment_text || "")}</p>
-          ${actions}
-        </div>`;
-        })
-        .join("")}</div>`;
-
-    let scoreSel = 0;
-    const stars = container.querySelectorAll("#stars-input span");
-    const textWrap = container.querySelector("#review-text-wrap");
-    stars.forEach((s) => {
-        s.addEventListener("click", () => {
-            scoreSel = Number(s.getAttribute("data-s"));
-            stars.forEach((x, idx) => x.classList.toggle("on", idx < scoreSel));
-            textWrap.classList.remove("hidden");
-        });
-    });
-
-    const toggle = container.querySelector("#toggle-review");
-    if (toggle) {
-        toggle.addEventListener("click", () => {
-            document
-                .getElementById("review-form-wrap")
-                .classList.toggle("hidden");
-        });
-    }
-
-    const submit = container.querySelector("#review-submit");
-    if (submit) {
-        submit.addEventListener("click", async () => {
-            const text = document.getElementById("review-text").value;
-            if (!scoreSel) {
-                showToast("Выберите оценку");
-                return;
-            }
-            try {
-                await HotelApi.createReview(hotelId, {
-                    score: scoreSel,
-                    comment_text: text,
-                });
-                showToast("Отзыв отправлен");
-                renderHotelDetail(document.getElementById("app"));
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
-    }
-
-    container.querySelectorAll(".js-rev-del").forEach((b) => {
-        b.addEventListener("click", async () => {
-            if (!confirm("Удалить отзыв?")) return;
-            try {
-                await ReviewApi.remove(b.getAttribute("data-id"));
-                showToast("Удалено");
-                renderHotelDetail(document.getElementById("app"));
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
-    });
-
-    container.querySelectorAll(".js-rev-edit").forEach((b) => {
-        b.addEventListener("click", async () => {
-            const id = b.getAttribute("data-id");
-            const rev = reviews.find((r) => r.id === id);
-            const nt = prompt("Новый текст", rev.comment_text || "");
-            if (nt == null) return;
-            const ns = prompt("Оценка 1-5", String(rev.score));
-            if (ns == null) return;
-            try {
-                await ReviewApi.update(id, {
-                    comment_text: nt,
-                    score: Number(ns),
-                });
-                showToast("Обновлено");
-                renderHotelDetail(document.getElementById("app"));
-            } catch (err) {
-                showToast(err.message);
-            }
-        });
-    });
-}
-
-async function renderBookingsPage(app) {
-    app.innerHTML = `<div class="page-head"><h1 class="page-title">Бронирования</h1><p class="page-sub">История и управление по ролям.</p></div><p class="text-muted">Загрузка…</p>`;
-    await ensureProfile();
-    const role = state.profile && state.profile.roles;
-    let rows = [];
-    try {
-        rows = await BookingApi.list();
-        if (!Array.isArray(rows)) rows = [];
-    } catch (e) {
-        app.innerHTML = `
-      <div class="page-head"><h1 class="page-title">Бронирования</h1><p class="page-sub">История и управление по ролям.</p></div>
-      <div class="error-panel">${escapeHtml(e.message)}</div>`;
-        return;
-    }
-
-    let hotels = state.hotels.length ? state.hotels : [];
-    try {
-        if (!hotels.length) hotels = await HotelApi.list();
-    } catch {
-        hotels = [];
-    }
-    const hotelByRoom = {};
-    for (const h of hotels) {
+    `;
+    authSection.querySelector(".auth-register").onclick = async () => {
+        const email = authSection.querySelector(".reg-email").value;
+        const password = authSection.querySelector(".reg-password").value;
+        const full_name = authSection.querySelector(".reg-fullname").value;
+        const phone = authSection.querySelector(".reg-phone").value;
         try {
-            const rr = await HotelApi.listRooms(h.id);
-            const list = rr.data || [];
-            for (const room of list) hotelByRoom[room.id] = h;
-        } catch {
-            /* skip */
+            const data = await API.register(email, password, full_name, phone);
+            setUser(data.user, data.token);
+            setHeaderAuth(true);
+            hideAllSections();
+            renderHotels();
+        } catch (err) {
+            alert("Ошибка регистрации");
         }
-    }
-
-    let filterHtml = "";
-    if (role === "Owner") {
-        const mine = hotels.filter(
-            (h) => String(h.owner) === String(getUserId()),
-        );
-        filterHtml = `
-      <div class="filters-bar">
-        <label>Отель <select id="flt-hotel"><option value="">Все мои</option>${mine.map((h) => `<option value="${h.id}">${escapeHtml(h.title)}</option>`).join("")}</select></label>
-      </div>`;
-    } else if (role === "Admin") {
-        filterHtml = `
-      <div class="filters-bar">
-        <input type="text" id="flt-user" placeholder="ID пользователя" />
-        <input type="text" id="flt-hotel-admin" placeholder="ID отеля" />
-        <input type="text" id="flt-room" placeholder="ID номера" />
-      </div>`;
-    }
-
-    const bodyRows = (list) =>
-        list
-            .map((b) => {
-                const h = hotelByRoom[b.room];
-                const hotelTitle = h
-                    ? h.title
-                    : `номер ${String(b.room).slice(0, 8)}…`;
-                const cancel =
-                    role === "Default_user"
-                        ? `<button type="button" class="linklike js-bk-cancel" data-id="${b.id}">Отменить</button>`
-                        : "";
-                const contact =
-                    role === "Owner"
-                        ? `<button type="button" class="linklike js-contact" data-user="${b.user}">Связь</button>`
-                        : "";
-                const adminDel =
-                    role === "Admin"
-                        ? `<button type="button" class="linklike js-bk-del" data-id="${b.id}">Удалить</button>`
-                        : "";
-                return `<tr>
-        <td>${escapeHtml(hotelTitle)}</td>
-        <td>${escapeHtml(String(b.check_in))} — ${escapeHtml(String(b.check_out))}</td>
-        ${role !== "Default_user" ? `<td class="text-muted">${escapeHtml(String(b.user))}</td>` : ""}
-        <td>${Number(b.total_price || 0).toLocaleString("ru-RU")} ₽</td>
-        <td>${cancel}${contact}${adminDel}</td>
-      </tr>`;
-            })
-            .join("");
-
-    const thead =
-        role === "Default_user"
-            ? `<tr><th>Отель</th><th>Даты</th><th>Стоимость</th><th></th></tr>`
-            : `<tr><th>Отель</th><th>Даты</th><th>Клиент (id)</th><th>Стоимость</th><th></th></tr>`;
-
-    app.innerHTML = `
-    <div class="page-head">
-      <h1 class="page-title">Бронирования</h1>
-      <p class="page-sub">Таблица броней: для гостя — свои поездки; для отельера — с фильтром; для администратора — поиск по id.</p>
-    </div>
-    ${filterHtml}
-    <div class="table-wrap"><table class="data"><thead>${thead}</thead><tbody id="bk-body">${bodyRows(rows)}</tbody></table></div>`;
-
-    const tbody = document.getElementById("bk-body");
-
-    function applyFilters() {
-        let list = rows;
-        if (role === "Owner") {
-            const sel = document.getElementById("flt-hotel");
-            const hid = sel && sel.value;
-            if (hid)
-                list = list.filter(
-                    (b) =>
-                        hotelByRoom[b.room] && hotelByRoom[b.room].id === hid,
-                );
-        }
-        if (role === "Admin") {
-            const u =
-                (document.getElementById("flt-user") &&
-                    document.getElementById("flt-user").value) ||
-                "";
-            const hotelId =
-                (document.getElementById("flt-hotel-admin") &&
-                    document.getElementById("flt-hotel-admin").value) ||
-                "";
-            const roomId =
-                (document.getElementById("flt-room") &&
-                    document.getElementById("flt-room").value) ||
-                "";
-            if (u) list = list.filter((b) => String(b.user).includes(u));
-            if (hotelId)
-                list = list.filter(
-                    (b) =>
-                        hotelByRoom[b.room] &&
-                        String(hotelByRoom[b.room].id).includes(hotelId),
-                );
-            if (roomId)
-                list = list.filter((b) => String(b.room).includes(roomId));
-        }
-        tbody.innerHTML = bodyRows(list);
-        bindBookingRowActions(tbody);
-    }
-
-    if (role === "Owner") {
-        document
-            .getElementById("flt-hotel")
-            .addEventListener("change", applyFilters);
-    }
-    if (role === "Admin") {
-        ["flt-user", "flt-hotel-admin", "flt-room"].forEach((id) => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener("input", applyFilters);
-        });
-    }
-
-    function bindBookingRowActions(rootEl) {
-        rootEl.querySelectorAll(".js-bk-cancel").forEach((btn) => {
-            btn.addEventListener("click", async () => {
-                if (!confirm("Отменить бронь?")) return;
-                try {
-                    await BookingApi.remove(btn.getAttribute("data-id"));
-                    showToast("Отменено");
-                    renderBookingsPage(document.getElementById("app"));
-                } catch (err) {
-                    showToast(err.message);
-                }
-            });
-        });
-        rootEl.querySelectorAll(".js-bk-del").forEach((btn) => {
-            btn.addEventListener("click", async () => {
-                if (!confirm("Удалить бронирование?")) return;
-                try {
-                    await BookingApi.remove(btn.getAttribute("data-id"));
-                    showToast("Удалено");
-                    renderBookingsPage(document.getElementById("app"));
-                } catch (err) {
-                    showToast(err.message);
-                }
-            });
-        });
-        rootEl.querySelectorAll(".js-contact").forEach((btn) => {
-            btn.addEventListener("click", () => {
-                showToast(
-                    `Клиент: ${btn.getAttribute("data-user")} — уведомление по API не настроено`,
-                );
-            });
-        });
-    }
-
-    bindBookingRowActions(tbody);
+    };
+    authSection.querySelector(".to-login").onclick = (e) => {
+        e.preventDefault();
+        renderAuthForm();
+    };
 }
 
-
-function handleNavClick(e, el) {
-    e.preventDefault();
-    const nav = el.getAttribute("data-nav");
-    if (!nav) return;
-    if (nav === "auth") {
-        if (getToken()) {
-            setToken(null);
-            setUserId(null);
-            state.profile = null;
-            showToast("Вы вышли");
-            navigate("hotels");
-        } else {
-            navigate("auth");
-        }
-        return;
+// --- Профиль ---
+async function renderProfile() {
+    showSection(profileSection);
+    profileSection.innerHTML =
+        "<div class='profile-form'><h2>Профиль</h2><div class='profile-info'>Загрузка...</div><button class='btn logout-btn'>Выйти</button></div>";
+    try {
+        const user = await API.getProfile();
+        profileSection.querySelector(".profile-info").innerHTML = `
+            <b>Имя:</b> ${user.full_name}<br>
+            <b>Email:</b> ${user.email || "—"}
+        `;
+    } catch {
+        profileSection.querySelector(".profile-info").innerHTML =
+            "Ошибка загрузки профиля";
     }
-    navigate(nav);
+    profileSection.querySelector(".logout-btn").onclick = logout;
 }
 
-function bindGlobalNav() {
-    if (bindGlobalNav._done) return;
-    bindGlobalNav._done = true;
-
-    document.addEventListener("click", (e) => {
-        const addRoomBtn = e.target.closest("#btn-add-room");
-        if (addRoomBtn) {
-            e.preventDefault();
-            openRoomDrawer(state.hotelId);
+// --- Бронирования ---
+async function renderBookings() {
+    showSection(bookingsSection);
+    bookingsSection.innerHTML =
+        "<h2>Мои бронирования</h2><div class='bookings-list'>Загрузка...</div>";
+    try {
+        const bookings = await API.getBookings();
+        const list = bookingsSection.querySelector(".bookings-list");
+        if (!bookings.length) {
+            list.textContent = "Нет бронирований";
             return;
         }
-    });
-
-    document.addEventListener("click", (e) => {
-        const el = e.target.closest("[data-nav]");
-        if (!el) return;
-        handleNavClick(e, el);
-    });
-}
-
-window.addEventListener("hashchange", () => {
-    parseHash();
-    render();
-});
-
-async function initApp() {
-    bindGlobalNav();
-    parseHash();
-    try {
-        await loadProfile();
+        list.innerHTML = "";
+        bookings.forEach((b) => {
+            const el = document.createElement("div");
+            el.className = "booking-card";
+            el.innerHTML = `
+                <b>${b.hotel_name || "Гостиница"}</b>
+                <span>Номер: ${b.room_title || "—"}</span><br>
+                <span>Заезд: ${b.check_in || "—"}</span><br>
+                <span>Выезд: ${b.check_out || "—"}</span><br>
+                <span><b>Итого: ${b.total_price || 0} руб</b></span>
+            `;
+            list.append(el);
+        });
     } catch {
-        state.profile = null;
+        bookingsSection.querySelector(".bookings-list").textContent =
+            "Ошибка загрузки";
     }
-    render();
 }
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initApp);
-} else {
-    initApp();
+// --- Гостиницы ---
+async function renderHotels() {
+    hideAllSections();
+    hotelsList.innerHTML = "Загрузка...";
+    try {
+        const hotels = await API.getHotels();
+        hotelsList.innerHTML = "";
+        hotels.forEach((hotel) => {
+            const card = document.createElement("div");
+            card.className = "hotel-card";
+            card.innerHTML = `
+                <div class="hotel-img" style="background-image:url('${hotel.hostel_images ? hotel.hostel_images.replace("http://localhost", "") : "https://source.unsplash.com/400x200/?hotel"}')"></div>
+                <div class="hotel-info">
+                    <h2>${hotel.title}</h2>
+                    <p><b>Город:</b> ${hotel.city || "—"}</p>
+                    <p><b>Адрес:</b> ${hotel.address || "—"}</p>
+                    <button class="btn detail-btn">Подробнее</button>
+                </div>
+            `;
+            card.querySelector(".detail-btn").onclick = () => renderHotelDetail(hotel);
+            hotelsList.append(card);
+        });
+    } catch {
+        hotelsList.innerHTML = "Ошибка загрузки гостиниц";
+    }
 }
+
+async function renderHotelDetail(hotel) {
+    showSection(hotelDetailSection);
+    const user = getUser();
+    const isOwner = user && (user.roles === "Admin" || (user.roles === "Owner" && user.id === hotel.owner));
+    hotelDetailSection.innerHTML = `
+        <div class="hotel-detail">
+            <button class="btn back-btn">← Назад</button>
+            <h1 class="hotel-detail-title">${hotel.title}</h1>
+            <div class="hotel-detail-img" style="background-image:url('${hotel.hostel_images ? hotel.hostel_images.replace("http://localhost", "") : "https://source.unsplash.com/800x400/?hotel"}')" ></div>
+            <div class="hotel-rooms-section">
+                <div class="rooms-header">
+                    <h2>Номера</h2>
+                    ${isOwner ? "<button class='btn add-room-btn'>+ Добавить номер</button>" : ""}
+                </div>
+                <div class="rooms-list">Загрузка...</div>
+            </div>
+            <div class="hotel-info-section">
+                <h2>Информация</h2>
+                <p><b>Адрес:</b> ${hotel.address || "—"}</p>
+                <p><b>Город:</b> ${hotel.city || "—"}</p>
+            </div>
+            <div class="hotel-description-section">
+                <h2>Описание</h2>
+                <p>${hotel.description || "Нет описания"}</p>
+            </div>
+            <div class="hotel-reviews-section">
+                <h2>Отзывы</h2>
+                <div class="reviews-list">Отзывов пока нет</div>
+            </div>
+        </div>
+    `;
+    hotelDetailSection.querySelector(".back-btn").onclick = () => {
+        hideAllSections();
+        renderHotels();
+    };
+    if (isOwner) {
+        hotelDetailSection.querySelector(".add-room-btn").onclick = () => showCreateRoomModal(hotel);
+    }
+    try {
+        const res = await API.getRooms(hotel.id);
+        const rooms = res.data || res;
+        const list = hotelDetailSection.querySelector(".rooms-list");
+        if (!rooms.length) { list.textContent = "Нет номеров"; return; }
+        list.innerHTML = rooms.map(r => `
+            <div class="room-card-detail">
+                <div class="room-card-img" style="background-image:url('${r.room_images ? r.room_images.replace("http://localhost", "") : "https://source.unsplash.com/300x200/?room"}')"></div>
+                <div class="room-card-content">
+                    <h3>${r.type === "standard" ? "Стандартный" : "Люкс"}</h3>
+                    <p class="room-card-info">Количество мест: <b>${r.max_place || "—"}</b></p>
+                    <p class="room-card-info">Площадь: <b>${r.square || "—"} м²</b></p>
+                    <p class="room-card-price"><b>${r.price_on_one_day} руб</b> / день</p>
+                    ${user ? `<button class='btn book-btn-small' data-room-id='${r.id}'>Забронировать</button>` : ""}
+                </div>
+            </div>
+        `).join("");
+        if (user) {
+            list.querySelectorAll(".book-btn-small").forEach(btn => {
+                btn.onclick = () => {
+                    const roomId = btn.getAttribute("data-room-id");
+                    const room = rooms.find(r => r.id === roomId);
+                    showBookingModalForRoom(room, hotel);
+                };
+            });
+        }
+    } catch {
+        hotelDetailSection.querySelector(".rooms-list").textContent = "Ошибка загрузки номеров";
+    }
+}
+
+function showBookingModalForRoom(room, hotel) {
+    showModal(`
+        <h2>Бронирование: ${hotel.title}</h2>
+        <p><b>Номер:</b> ${room.type === "standard" ? "Стандартный" : "Люкс"} — ${room.price_on_one_day} руб/день</p>
+        <label>Дата заезда: <input type="date" class="date-from"></label><br>
+        <label>Дата выезда: <input type="date" class="date-to"></label><br>
+        <button class="btn confirm-booking">Забронировать</button>
+        <button class="btn close-modal">Отмена</button>
+    `);
+    modal.querySelector(".close-modal").onclick = hideModal;
+    modal.querySelector(".confirm-booking").onclick = async () => {
+        const check_in = modal.querySelector(".date-from").value;
+        const check_out = modal.querySelector(".date-to").value;
+        if (!check_in || !check_out) { alert("Заполните даты"); return; }
+        try {
+            await API.createBooking(room.id, check_in, check_out);
+            hideModal();
+            alert("Бронирование успешно!");
+        } catch {
+            alert("Ошибка бронирования");
+        }
+    };
+}
+
+function showCreateRoomModal(hotel) {
+    showModal(`
+        <h2>Добавить номер</h2>
+        <label>Тип:
+            <select class="room-type">
+                <option value="standard">Стандартный</option>
+                <option value="deluxe">Люкс</option>
+            </select>
+        </label>
+        <label>Цена за день: <input type="number" class="room-price"></label>
+        <label>Количество мест: <input type="number" class="room-max-place" min="1"></label>
+        <label>Площадь (м²): <input type="number" class="room-square" min="1"></label>
+        <label>Описание: <input type="text" class="room-description"></label>
+        <label>Фото: <input type="file" class="room-image" accept="image/*"></label>
+        <button class="btn confirm-create-room">Создать</button>
+        <button class="btn close-modal">Отмена</button>
+    `);
+    modal.querySelector(".close-modal").onclick = hideModal;
+    modal.querySelector(".confirm-create-room").onclick = async () => {
+        const type = modal.querySelector(".room-type").value;
+        const price = modal.querySelector(".room-price").value.trim();
+        const max_place = modal.querySelector(".room-max-place").value.trim();
+        const square = modal.querySelector(".room-square").value.trim();
+        const description = modal.querySelector(".room-description").value.trim();
+        const imageFile = modal.querySelector(".room-image").files[0];
+        if (!price || !max_place || !square || !description || !imageFile) {
+            alert("Заполните все поля и выберите фото");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("title", type === "standard" ? "Стандартный номер" : "Люкс номер");
+        formData.append("type", type);
+        formData.append("price_on_one_day", price);
+        formData.append("max_place", max_place);
+        formData.append("square", square);
+        formData.append("description", description);
+        formData.append("room_images", imageFile);
+        try {
+            await API.createRoom(hotel.id, formData);
+            hideModal();
+            alert("Номер успешно добавлен!");
+            renderHotelDetail(hotel);
+        } catch (err) {
+            const msg = typeof err === "object" ? JSON.stringify(err) : err;
+            alert("Ошибка создания номера: " + msg);
+        }
+    };
+}
+
+async function showBookingModal(hotel) {
+    showModal(`<h2>Бронирование: ${hotel.title}</h2><div class="rooms-list">Загрузка номеров...</div>`);
+    let rooms = [];
+    try {
+        const res = await API.getRooms(hotel.id);
+        rooms = res.data || res;
+    } catch {
+        modal.querySelector(".rooms-list").textContent = "Ошибка загрузки номеров";
+        return;
+    }
+    if (!rooms.length) {
+        modal.querySelector(".rooms-list").textContent = "Нет доступных номеров";
+        return;
+    }
+    const roomOptions = rooms.map(r => `<option value="${r.id}">${r.type} — ${r.price_on_one_day} руб/день</option>`).join("");
+    modal.querySelector(".rooms-list").innerHTML = `
+        <label>Номер: <select class="room-select">${roomOptions}</select></label><br>
+        <label>Дата заезда: <input type="date" class="date-from"></label><br>
+        <label>Дата выезда: <input type="date" class="date-to"></label><br>
+        <button class="btn confirm-booking">Забронировать</button>
+        <button class="btn close-modal">Отмена</button>
+    `;
+    modal.querySelector(".close-modal").onclick = hideModal;
+    modal.querySelector(".confirm-booking").onclick = async () => {
+        const roomId = modal.querySelector(".room-select").value;
+        const check_in = modal.querySelector(".date-from").value;
+        const check_out = modal.querySelector(".date-to").value;
+        if (!check_in || !check_out) { alert("Заполните даты"); return; }
+        try {
+            await API.createBooking(roomId, check_in, check_out);
+            hideModal();
+            alert("Бронирование успешно!");
+        } catch {
+            alert("Ошибка бронирования");
+        }
+    };
+}
+
+function showCreateHotelModal() {
+    showModal(`
+        <h2>Добавить жильё</h2>
+        <label>Название: <input type="text" class="hotel-title"></label>
+        <label>Описание: <input type="text" class="hotel-description"></label>
+        <label>Адрес: <input type="text" class="hotel-address"></label>
+        <label>Город: <input type="text" class="hotel-city"></label>
+        <label>Фото: <input type="file" class="hotel-image" accept="image/*"></label>
+        <button class="btn confirm-create-hotel">Создать</button>
+        <button class="btn close-modal">Отмена</button>
+    `);
+    modal.querySelector(".close-modal").onclick = hideModal;
+    modal.querySelector(".confirm-create-hotel").onclick = async () => {
+        const title = modal.querySelector(".hotel-title").value.trim();
+        const description = modal.querySelector(".hotel-description").value.trim();
+        const address = modal.querySelector(".hotel-address").value.trim();
+        const city = modal.querySelector(".hotel-city").value.trim();
+        const imageFile = modal.querySelector(".hotel-image").files[0];
+        if (!title || !description || !address || !imageFile) {
+            alert("Заполните все поля и выберите фото");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("description", description);
+        formData.append("address", address);
+        formData.append("city", city);
+        formData.append("hostel_images", imageFile);
+        try {
+            await API.postForm("hotels/", formData);
+            hideModal();
+            alert("Жильё успешно добавлено!");
+            renderHotels();
+        } catch (err) {
+            const msg = typeof err === "object" ? JSON.stringify(err) : err;
+            alert("Ошибка создания: " + msg);
+        }
+    };
+}
+
+// --- Навигация ---
+btnLogin.onclick = renderAuthForm;
+btnProfile.onclick = renderProfile;
+btnBookings.onclick = renderBookings;
+btnCreateHotel.onclick = showCreateHotelModal;
+modal.onclick = (e) => {
+    if (e.target === modal) hideModal();
+};
+
+window.setHeaderAuth = setHeaderAuth;
+setHeaderAuth(!!getUser());
+renderHotels();

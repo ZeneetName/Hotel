@@ -1,6 +1,11 @@
-FROM nginx:alpine
+FROM nginx:latest
 
+# Копируем все файлы фронтенда в nginx
+COPY . /usr/share/nginx/html/
+
+# Копируем конфиг nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html main.js api.js styles.css /usr/share/nginx/html/
 
 EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
