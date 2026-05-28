@@ -36,3 +36,4 @@ def hotels_with_available_rooms(hotel_queryset, check_in: date, check_out: date)
         .distinct()
     )
     return hotel_queryset.filter(id__in=hotel_ids)
+

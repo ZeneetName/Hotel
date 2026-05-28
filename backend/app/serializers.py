@@ -119,6 +119,9 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source="user.full_name", read_only=True)
+    user_id = serializers.CharField(source="user.id", read_only=True)
+
     class Meta:
         model = Review
         fields = [
@@ -126,19 +129,22 @@ class ReviewSerializer(serializers.ModelSerializer):
             "comment_text",
             "hotel",
             "user",
+            "user_name",
+            "user_id",
             "created_at",
             "score",
         ]
-        read_only_fields = ["id", "created_at", "hotel", "user"]
+        read_only_fields = ["id", "created_at", "hotel", "user", "user_name", "user_id"]
 
     def validate_score(self, value):
         if not(1 <= value <= 5):
             raise serializers.ValidationError('Рейтинг должен быть в промежутке от 1 до 5')
         return value
 
-    def validate_text(self, value):
-        if len(value) <= 5:
-            raise serializers.ValidationError("Напишите полноценный комментарий")
+    def validate_comment_text(self, value):
+        if len(value) < 3:
+            raise serializers.ValidationError("Отзыв должен содержать минимум 3 символа")
+        return value
 
 
 
@@ -146,6 +152,7 @@ class DishSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dish
         fields = [
+            "id",
             "hotel",
             "dish_images",
             "title",
@@ -153,13 +160,14 @@ class DishSerializer(serializers.ModelSerializer):
             "weight",
             "price",
         ]
-        read_only_fields = ["hotel"]
+        read_only_fields = ["id", "hotel"]
 
 
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = [
+            "id",
             "hotel",
             "service_images",
             "title",
@@ -167,4 +175,4 @@ class ServiceSerializer(serializers.ModelSerializer):
             "duration",
         ]
 
-        read_only_fields = ["hotel"]
+        read_only_fields = ["id", "hotel"]

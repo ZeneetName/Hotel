@@ -82,4 +82,4 @@ class Permission_NO_Create_for_Dish_Service(BasePermission):
             return True
         if request.method == 'POST':
             return False
-        return (request.user.roles == "Owner" and obj.user == request.user) or (request.user.roles == 'Admin')
+        return (request.user.roles == "Owner" and obj.hotel.owner == request.user) or (request.user.roles == 'Admin')

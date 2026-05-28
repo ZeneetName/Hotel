@@ -139,7 +139,7 @@ class HotelViewSets(viewsets.ModelViewSet):
         if self.action == "room":
             return [CREATE_LIST_ROOM_DISH()]
         if self.action == "reviews":
-            return [Create_Get_Reviews()]
+            return [AllowAny()]
         if self.action == "dish":
             return [CREATE_LIST_ROOM_DISH()]
         return [CREATEUPDATEDELETE_FOR_OWNERAUTHORS_AND_ADMIN_HOSTEL()]
@@ -193,35 +193,77 @@ class HotelViewSets(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
-    @action(methods=['POST', 'GET'], detail=True)
+    @action(methods=['POST', 'GET', 'PATCH', 'DELETE'], detail=True)
     def reviews(self, request, pk=None):
         hotel = self.get_object()
+
         if request.method == 'POST':
+            if not request.user.is_authenticated:
+                return Response({'error': 'Вы должны быть авторизированы для добавления отзыва'}, status=401)
+
             serializer = ReviewSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save(hotel=hotel, user=self.request.user)
-            data = serializer.data
+            serializer.save(hotel=hotel, user=request.user)
 
             return Response({
-                'massage': 'Отзыв создан',
-                'data': data
-            })
+                'message': 'Отзыв успешно добавлен',
+                'data': serializer.data
+            }, status=201)
+
         if request.method == 'GET':
             reviews = Review.objects.filter(hotel=hotel)
             serializer = ReviewSerializer(reviews, many=True)
-            data = serializer.data
 
             return Response({
-                'massage': f'Отзывы {hotel.title}',
-                'data': data
+                'message': f'Отзывы отеля {hotel.title}',
+                'data': serializer.data
             })
+
+        if request.method == 'PATCH':
+            review_id = request.query_params.get('review_id')
+            if not review_id:
+                return Response({'error': 'Требуется review_id'}, status=400)
+
+            try:
+                review = Review.objects.get(id=review_id, hotel=hotel)
+            except Review.DoesNotExist:
+                return Response({'error': 'Отзыв не найден'}, status=404)
+
+            if review.user != request.user and request.user.roles != 'Admin':
+                return Response({'error': 'Вы можете редактировать только свои отзывы'}, status=403)
+
+            serializer = ReviewSerializer(review, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response({
+                'message': 'Отзыв успешно обновлен',
+                'data': serializer.data
+            })
+
+        if request.method == 'DELETE':
+            review_id = request.query_params.get('review_id')
+            if not review_id:
+                return Response({'error': 'Требуется review_id'}, status=400)
+
+            try:
+                review = Review.objects.get(id=review_id, hotel=hotel)
+            except Review.DoesNotExist:
+                return Response({'error': 'Отзыв не найден'}, status=404)
+
+            if review.user != request.user and request.user.roles != 'Admin':
+                return Response({'error': 'Вы можете удалять только свои отзывы'}, status=403)
+
+            review.delete()
+
+            return Response({'message': 'Отзыв удален'}, status=204)
 
     @action(methods=['POST', 'GET'], detail=True)
     def dish(self, request, pk=None):
         hotel = self.get_object()
 
         if request.method == "POST":
-            if self.request.user.roles != 'Admin' or self.request.user != hotel.owner:
+            if self.request.user.roles != 'Admin' and self.request.user != hotel.owner:
                 return Response({
                     'error': 'Вы можете создавать блюда только в своих гостиницех'},
                     status=403)
@@ -231,7 +273,7 @@ class HotelViewSets(viewsets.ModelViewSet):
             data = serializer.data
 
             return Response({
-                'massage': f'Блюдо {hotel.title} создано',
+                'message': 'Блюдо создано',
                 'data': data
             })
         if request.method == "GET":
@@ -240,7 +282,7 @@ class HotelViewSets(viewsets.ModelViewSet):
             data = serializer.data
 
             return Response({
-                'massage': f'Отзывы',
+                'message': 'Список блюд',
                 'data': data
             })
 
@@ -249,7 +291,7 @@ class HotelViewSets(viewsets.ModelViewSet):
         hotel = self.get_object()
 
         if request.method == "POST":
-            if self.request.user.roles != 'Admin' or self.request.user != hotel.owner:
+            if self.request.user.roles != 'Admin' and self.request.user != hotel.owner:
                 return Response({
                     'error': 'Вы можете создавать услуги только в своих гостиницех'},
                     status=403)
@@ -259,16 +301,16 @@ class HotelViewSets(viewsets.ModelViewSet):
             data = serializer.data
 
             return Response({
-                'massage': f'Услуга {hotel.title} создана',
+                'message': 'Услуга создана',
                 'data': data
             })
         if request.method == "GET":
-            dish = Service.objects.filter(hotel=hotel)
-            serializer = ServiceSerializer(dish, many=True)
+            services = Service.objects.filter(hotel=hotel)
+            serializer = ServiceSerializer(services, many=True)
             data = serializer.data
 
             return Response({
-                'massage': f'Услуги',
+                'message': 'Список услуг',
                 'data': data
             })
 
@@ -344,8 +386,22 @@ class DishViewSets(viewsets.ModelViewSet):
     serializer_class = DishSerializer
     permission_classes = [Permission_NO_Create_for_Dish_Service]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        hotel_id = self.request.query_params.get('hotel')
+        if hotel_id:
+            queryset = queryset.filter(hotel_id=hotel_id)
+        return queryset
+
 
 class ServiceViewSets(viewsets.ModelViewSet):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
     permission_classes = [Permission_NO_Create_for_Dish_Service]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        hotel_id = self.request.query_params.get('hotel')
+        if hotel_id:
+            queryset = queryset.filter(hotel_id=hotel_id)
+        return queryset
