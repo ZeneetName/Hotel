@@ -1,5 +1,9 @@
 import API from "./api.js";
 import Toast from "./notifications.js";
+import {loaderHtml} from "./loader.js";
+import {btnDeleteHtml} from "./btn-delete.js";
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const hotelsList = document.querySelector(".hotels-list");
 const authSection = document.querySelector(".auth-section");
@@ -30,12 +34,10 @@ function showSection(section) {
     if (section === authSection) {
         section.style.display = "flex";
         header.style.display = "none"
-    }
-    else if (section === profileSection){
+    } else if (section === profileSection) {
         section.style.display = "flex";
         header.style.display = "flex"
-        }
-    else {
+    } else {
         section.style.display = "block";
         header.style.display = "flex"
     }
@@ -52,13 +54,14 @@ function hideAllSections() {
     );
     document.querySelector(".hotels-section").style.display = "block";
 
-     header.style.display = "flex"
+    header.style.display = "flex"
 }
+
 function showModal(html) {
     modal.innerHTML = `<div class="modal-content">${html}</div>`;
     modal.style.display = "flex";
     // Добавляем запись в историю для модального окна
-    pushState({ page: "modal", previousState: window.history.state }, "#modal");
+    pushState({page: "modal", previousState: window.history.state}, "#modal");
 }
 
 function hideModal() {
@@ -84,12 +87,14 @@ function getUser() {
         ? JSON.parse(localStorage.getItem("user") || "{}")
         : null;
 }
+
 function setUser(user, token) {
     if (user && token) {
         localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("token", token);
     }
 }
+
 function logout() {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -100,7 +105,7 @@ function logout() {
 // --- Аутентификация ---
 function renderAuthForm(skipHistory = false) {
     showSection(authSection);
-    if (!skipHistory) pushState({ page: "login" }, "#login");
+    if (!skipHistory) pushState({page: "login"}, "#login");
     authSection.innerHTML = `
         <div class="auth-form">
             <h2>Вход</h2>
@@ -113,12 +118,12 @@ function renderAuthForm(skipHistory = false) {
     authSection.querySelector(".auth-login").onclick = async () => {
         const email = authSection.querySelector(".auth-email").value;
         const password = authSection.querySelector(".auth-password").value;
-        
+
         if (!email || !password) {
             Toast.error("Заполните email и пароль");
             return;
         }
-        
+
         try {
             const data = await API.login(email, password);
             setUser(data.user, data.token);
@@ -136,9 +141,10 @@ function renderAuthForm(skipHistory = false) {
         renderRegisterForm();
     };
 }
+
 function renderRegisterForm(skipHistory = false) {
     showSection(authSection);
-    if (!skipHistory) pushState({ page: "register" }, "#register");
+    if (!skipHistory) pushState({page: "register"}, "#register");
     authSection.innerHTML = `
         <div class="auth-form">
             <h2>Регистрация</h2>
@@ -175,17 +181,25 @@ function renderRegisterForm(skipHistory = false) {
 // --- Профиль ---
 async function renderProfile(skipHistory = false) {
     showSection(profileSection);
-    if (!skipHistory) pushState({ page: "profile" }, "#profile");
-    profileSection.innerHTML =
-        "<div class='profile-container'><h2>Профиль</h2><div class='profile-content'>Загрузка...</div><button class='btn logout-btn'>Выйти</button></div>";
+    if (!skipHistory) pushState({page: "profile"}, "#profile");
+    profileSection.innerHTML = `<div class='profile-container'><h2>Профиль</h2><div class='profile-content'></div><button class='btn logout-btn'>Выйти</button></div>`
+    const content = profileSection.querySelector(".profile-content");
+    let isLoaded = false;
+    setTimeout(() => {
+        if (!isLoaded) {
+            content.innerHTML = `Загрузка... ${loaderHtml}`;
+        }
+    }, 500);
     try {
         const user = await API.getProfile();
+        isLoaded = true;
+        content.innerHTML = ""
         const roleText =
             user.roles === "Admin"
                 ? "Администратор"
                 : user.roles === "Owner"
-                  ? "Владелец"
-                  : "Пользователь";
+                    ? "Владелец"
+                    : "Пользователь";
         const avatarInitial = user.full_name.charAt(0).toUpperCase();
 
         profileSection.querySelector(".profile-content").innerHTML = `
@@ -206,8 +220,8 @@ async function renderProfile(skipHistory = false) {
                                 </div>
                             </div>
                             ${
-                                user.phone
-                                    ? `
+            user.phone
+                ? `
                             <div class="profile-detail-item">
                                 <span class="profile-detail-icon">📱</span>
                                 <div class="profile-detail-content">
@@ -216,8 +230,8 @@ async function renderProfile(skipHistory = false) {
                                 </div>
                             </div>
                             `
-                                    : ""
-                            }
+                : ""
+        }
                         </div>
                     </div>
                 </div>
@@ -233,16 +247,27 @@ async function renderProfile(skipHistory = false) {
 // --- Бронирования ---
 async function renderBookings(skipHistory = false) {
     showSection(bookingsSection);
-    if (!skipHistory) pushState({ page: "bookings" }, "#bookings");
+    if (!skipHistory) pushState({page: "bookings"}, "#bookings");
     bookingsSection.innerHTML =
-        "<h2>Мои бронирования</h2><div class='bookings-list'>Загрузка...</div>";
+        `<h2>Мои бронирования</h2><div class='bookings-list'></div>`
+
+    const list = bookingsSection.querySelector(".bookings-list");
+    let isLoaded = false;
+    setTimeout(() => {
+        if (!isLoaded) {
+            list.innerHTML = `Загрузка... ${loaderHtml}`;
+        }
+    }, 500);
+
     try {
         const bookings = await API.getBookings();
-        const list = bookingsSection.querySelector(".bookings-list");
+        isLoaded = true;
+        list.innerHTML = "";
         if (!bookings.length) {
             list.textContent = "Нет бронирований";
             return;
         }
+
         list.innerHTML = "";
         bookings.forEach((b) => {
             const el = document.createElement("div");
@@ -266,11 +291,19 @@ async function renderBookings(skipHistory = false) {
 async function renderHotels(skipHistory = false) {
     hideAllSections();
     if (!skipHistory) {
-        pushState({ page: "hotels" }, "#hotels");
+        pushState({page: "hotels"}, "#hotels");
     }
-    hotelsList.innerHTML = "Загрузка...";
+    hotelsList.innerHTML = "";
+    let isLoaded = false;
+
+    setTimeout(() => {
+        if (!isLoaded) {
+            hotelsList.innerHTML = `Загрузка... ${loaderHtml}`;
+        }
+    }, 500);
     try {
         const hotels = await API.getHotels();
+        isLoaded = true;
         hotelsList.innerHTML = "";
         hotels.forEach((hotel) => {
             const card = document.createElement("div");
@@ -297,7 +330,7 @@ async function renderHotelDetail(hotel, skipHistory = false) {
     showSection(hotelDetailSection);
     if (!skipHistory)
         pushState(
-            { page: "hotel", hotelId: hotel.id, hotel: hotel },
+            {page: "hotel", hotelId: hotel.id, hotel: hotel},
             `#hotel/${hotel.id}`,
         );
     const user = getUser();
@@ -309,7 +342,7 @@ async function renderHotelDetail(hotel, skipHistory = false) {
         <div class="hotel-detail">
             <div class="hotel-detail-header">
                 <button class="btn back-btn">← Назад</button>
-                ${isOwner ? `<div class="hotel-actions"><button class='btn btn-small edit-hotel-btn'>✏️ Редактировать</button><button class='btn btn-small delete-hotel-btn' style="background: #dc3545;">🗑️ Удалить</button></div>` : ""}
+                ${isOwner ? `<div class="hotel-actions"><button class='btn btn-small edit-hotel-btn'>✏️ Редактировать</button>${btnDeleteHtml}</button></div>` : ""}
             </div>
             <h1 class="hotel-detail-title">${hotel.title}</h1>
             <div class="hotel-detail-img" style="background-image:url('${hotel.hostel_images ? hotel.hostel_images.replace("http://localhost", "") : "https://source.unsplash.com/800x400/?hotel"}')" ></div>
@@ -318,7 +351,7 @@ async function renderHotelDetail(hotel, skipHistory = false) {
                     <h2>Номера</h2>
                     ${isOwner ? "<button class='btn add-room-btn'>+ Добавить номер</button>" : ""}
                 </div>
-                <div class="rooms-list">Загрузка...</div>
+                <div class="rooms-list"></div>
             </div>
             <div class="hotel-info-section">
                 <h2>Информация</h2>
@@ -333,15 +366,15 @@ async function renderHotelDetail(hotel, skipHistory = false) {
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h2>Дополнительно</h2>
                     ${
-                        isOwner
-                            ? `
+        isOwner
+            ? `
                         <div>
                             <button class="btn btn-small add-menu-btn" style="margin-right: 8px;">+ Добавить меню</button>
                             <button class="btn btn-small add-service-btn">+ Добавить услугу</button>
                         </div>
                     `
-                            : ""
-                    }
+            : ""
+    }
                 </div>
                 <div style="display: flex; gap: 16px; margin-top: 16px;">
                     <button class="btn additional-btn" data-type="menu">Меню</button>
@@ -359,22 +392,20 @@ async function renderHotelDetail(hotel, skipHistory = false) {
         hideAllSections();
         renderHotels();
     };
-    
-    // Обработчики для редактирования и удаления гостиницы
+
     if (isOwner) {
         const editHotelBtn = hotelDetailSection.querySelector(".edit-hotel-btn");
         const deleteHotelBtn = hotelDetailSection.querySelector(".delete-hotel-btn");
-        
+
         if (editHotelBtn) {
             editHotelBtn.onclick = () => showEditHotelPage(hotel);
         }
-        
+
         if (deleteHotelBtn) {
             deleteHotelBtn.onclick = () => showDeleteHotelConfirm(hotel);
         }
     }
 
-    // Обработчики для дополнительного раздела
     const additionalBtns =
         hotelDetailSection.querySelectorAll(".additional-btn");
     const additionalContent = hotelDetailSection.querySelector(
@@ -403,8 +434,8 @@ async function renderHotelDetail(hotel, skipHistory = false) {
                             <h3>Меню</h3>
                             <div class="dishes-grid">
                                 ${items
-                                    .map(
-                                        (dish) => `
+                            .map(
+                                (dish) => `
                                     <div class="dish-card">
                                         ${dish.dish_images ? `<img src="${dish.dish_images}" alt="${dish.title}">` : ""}
                                         <h4>${dish.title}</h4>
@@ -412,19 +443,19 @@ async function renderHotelDetail(hotel, skipHistory = false) {
                                         <p class="dish-weight">${dish.weight}г</p>
                                         <p class="dish-price">${dish.price} ₽</p>
                                         ${
-                                            isOwner
-                                                ? `
+                                    isOwner
+                                        ? `
                                         <div class="dish-card-actions">
                                             <button class="btn-small edit-dish-btn" data-dish-id="${dish.id}">✏️</button>
                                             <button class="btn-small delete-dish-btn" data-dish-id="${dish.id}">🗑️</button>
                                         </div>
                                         `
-                                                : ""
-                                        }
+                                        : ""
+                                }
                                     </div>
                                 `,
-                                    )
-                                    .join("")}
+                            )
+                            .join("")}
                             </div>
                         `;
                     }
@@ -441,8 +472,8 @@ async function renderHotelDetail(hotel, skipHistory = false) {
                             <h3>Услуги</h3>
                             <div class="services-list">
                                 ${items
-                                    .map(
-                                        (service) => `
+                            .map(
+                                (service) => `
                                     <div class="service-card">
                                         ${service.service_images ? `<img src="${service.service_images}" alt="${service.title}">` : `<div class="service-placeholder"></div>`}
                                         <div class="service-info">
@@ -451,19 +482,19 @@ async function renderHotelDetail(hotel, skipHistory = false) {
                                             <p class="service-price">${service.price} ₽</p>
                                         </div>
                                         ${
-                                            isOwner
-                                                ? `
+                                    isOwner
+                                        ? `
                                         <div class="service-card-actions">
                                             <button class="btn-small edit-service-btn" data-service-id="${service.id}">✏️</button>
                                             <button class="btn-small delete-service-btn" data-service-id="${service.id}">🗑️</button>
                                         </div>
                                         `
-                                                : ""
-                                        }
+                                        : ""
+                                }
                                     </div>
                                 `,
-                                    )
-                                    .join("")}
+                            )
+                            .join("")}
                             </div>
                         `;
                     }
@@ -712,10 +743,10 @@ async function renderHotelDetail(hotel, skipHistory = false) {
             list.textContent = "Нет номеров";
             return;
         }
-        
+
         // Создаем контейнер для первого номера и карточки владельца
         list.innerHTML = '';
-        
+
         rooms.forEach((r, index) => {
             const roomCard = `
             <div class="room-card-detail" data-room-id='${r.id}'>
@@ -738,13 +769,13 @@ async function renderHotelDetail(hotel, skipHistory = false) {
                 </div>
             </div>
         `;
-            
+
             // Для первого номера - добавляем контейнер с владельцем
             if (index === 0) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'rooms-first-wrapper';
                 wrapper.innerHTML = roomCard;
-                
+
                 // Добавляем карточку владельца
                 const ownerCard = document.createElement('div');
                 ownerCard.className = 'owner-card-standalone';
@@ -756,7 +787,7 @@ async function renderHotelDetail(hotel, skipHistory = false) {
                         ${hotel.owner_email ? `<div class="owner-contact">📧</div><div class="owner-contact-text">${hotel.owner_email}</div>` : ""}
                     </div>
                 `;
-                
+
                 wrapper.appendChild(ownerCard);
                 list.appendChild(wrapper);
             } else {
@@ -1103,9 +1134,9 @@ function showRoomDetailModal(room, hotel, isOwner) {
             </div>
         </div>
     `);
-    
+
     modal.querySelector(".close-room-detail-btn").onclick = hideModal;
-    
+
     if (isOwner) {
         modal.querySelector(".edit-room-detail-btn").onclick = () => {
             hideModal();
@@ -1141,7 +1172,7 @@ function showDeleteRoomConfirm(hotel, roomId) {
             </div>
         </div>
     `);
-    
+
     modal.querySelector(".cancel-delete-room-btn").onclick = hideModal;
     modal.querySelector(".confirm-delete-room-btn").onclick = async () => {
         try {
@@ -1211,12 +1242,12 @@ function showEditRoomModal(hotel, room) {
         const square = modal.querySelector(".room-square").value.trim();
         const description = modal.querySelector(".room-description").value.trim();
         const imageFiles = modal.querySelector(".room-image").files;
-        
+
         if (!title || !price || !max_place || !square || !description) {
             Toast.warning("Заполните все обязательные поля");
             return;
         }
-        
+
         try {
             if (imageFiles.length > 0) {
                 const formData = new FormData();
@@ -1305,7 +1336,7 @@ function showCreateRoomModal(hotel) {
                     return;
                 }
                 const user = getUser();
-                
+
                 list.innerHTML = '';
                 rooms.forEach((r, index) => {
                     const roomCard = `
@@ -1329,13 +1360,13 @@ function showCreateRoomModal(hotel) {
                         </div>
                     </div>
                 `;
-                    
+
                     // Для первого номера - добавляем контейнер с владельцем
                     if (index === 0) {
                         const wrapper = document.createElement('div');
                         wrapper.className = 'rooms-first-wrapper';
                         wrapper.innerHTML = roomCard;
-                        
+
                         // Добавляем карточку владельца
                         const ownerCard = document.createElement('div');
                         ownerCard.className = 'owner-card-standalone';
@@ -1347,14 +1378,14 @@ function showCreateRoomModal(hotel) {
                                 ${hotel.owner_email ? `<div class="owner-contact">📧</div><div class="owner-contact-text">${hotel.owner_email}</div>` : ""}
                             </div>
                         `;
-                        
+
                         wrapper.appendChild(ownerCard);
                         list.appendChild(wrapper);
                     } else {
                         list.insertAdjacentHTML('beforeend', roomCard);
                     }
                 });
-                
+
                 // Обработчики для открытия детального просмотра номера
                 list.querySelectorAll(".room-card-detail").forEach((card) => {
                     card.onclick = (e) => {
@@ -1366,7 +1397,7 @@ function showCreateRoomModal(hotel) {
                         showRoomDetailModal(room, hotel, isOwner);
                     };
                 });
-                
+
                 // Обработчики для редактирования и удаления номеров (для владельца)
                 if (isOwner) {
                     list.querySelectorAll(".edit-room-btn").forEach((btn) => {
@@ -1376,7 +1407,7 @@ function showCreateRoomModal(hotel) {
                             showEditRoomModal(hotel, room);
                         };
                     });
-                    
+
                     list.querySelectorAll(".delete-room-btn").forEach((btn) => {
                         btn.onclick = async () => {
                             const roomId = btn.getAttribute("data-room-id");
@@ -1418,7 +1449,7 @@ function showCreateRoomModal(hotel) {
 
 async function showBookingModal(hotel) {
     showModal(
-        `<h2>Бронирование: ${hotel.title}</h2><div class="rooms-list">Загрузка номеров...</div>`,
+        `<h2>Бронирование: ${hotel.title}</h2><div class="rooms-list"></div>`,
     );
     let rooms = [];
     try {
@@ -1470,8 +1501,8 @@ async function showBookingModal(hotel) {
 
 function showEditHotelPage(hotel) {
     showSection(hotelDetailSection);
-    pushState({ page: 'edit-hotel', hotelId: hotel.id }, `#edit-hotel/${hotel.id}`);
-    
+    pushState({page: 'edit-hotel', hotelId: hotel.id}, `#edit-hotel/${hotel.id}`);
+
     hotelDetailSection.innerHTML = `
         <div class="edit-hotel-page">
             <button class="btn back-btn">← Назад к гостинице</button>
@@ -1508,22 +1539,22 @@ function showEditHotelPage(hotel) {
             </div>
         </div>
     `;
-    
+
     hotelDetailSection.querySelector(".back-btn").onclick = () => renderHotelDetail(hotel);
     hotelDetailSection.querySelector(".cancel-edit-btn").onclick = () => renderHotelDetail(hotel);
-    
+
     hotelDetailSection.querySelector(".save-hotel-btn").onclick = async () => {
         const title = hotelDetailSection.querySelector(".hotel-title-input").value.trim();
         const city = hotelDetailSection.querySelector(".hotel-city-input").value.trim();
         const address = hotelDetailSection.querySelector(".hotel-address-input").value.trim();
         const description = hotelDetailSection.querySelector(".hotel-description-input").value.trim();
         const imageFiles = hotelDetailSection.querySelector(".hotel-image-input").files;
-        
+
         if (!title || !address || !description) {
             Toast.warning("Заполните обязательные поля: название, адрес, описание");
             return;
         }
-        
+
         try {
             if (imageFiles.length > 0) {
                 const formData = new FormData();
@@ -1544,7 +1575,7 @@ function showEditHotelPage(hotel) {
                 });
             }
             Toast.success("Гостиница успешно обновлена!");
-            const updatedHotel = { ...hotel, title, city, address, description };
+            const updatedHotel = {...hotel, title, city, address, description};
             renderHotelDetail(updatedHotel);
         } catch (err) {
             Toast.error("Ошибка при обновлении гостиницы");
@@ -1565,7 +1596,7 @@ function showDeleteHotelConfirm(hotel) {
             </div>
         </div>
     `);
-    
+
     modal.querySelector(".cancel-delete-btn").onclick = hideModal;
     modal.querySelector(".confirm-delete-btn").onclick = async () => {
         try {
@@ -1768,12 +1799,12 @@ window.addEventListener("popstate", async (event) => {
     }
 
     if (event.state) {
-        const { page, hotelId } = event.state;
+        const {page, hotelId} = event.state;
 
         switch (page) {
             case "hotels":
                 hideAllSections();
-                hotelsList.innerHTML = "Загрузка...";
+                hotelsList.innerHTML = `Загрузка...`;
                 try {
                     const hotels = await API.getHotels();
                     hotelsList.innerHTML = "";
@@ -1839,5 +1870,5 @@ window.addEventListener("keydown", (e) => {
 });
 
 // Инициализация - заменяем текущее состояние
-window.history.replaceState({ page: "hotels" }, "", "#hotels");
+window.history.replaceState({page: "hotels"}, "", "#hotels");
 renderHotels(true);
