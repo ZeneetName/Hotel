@@ -53,6 +53,7 @@ class HotelSerializer(serializers.ModelSerializer):
             "address",
             "city",
             "rating",
+            "min_price",
             "created_at",
         ]
 

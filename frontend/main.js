@@ -26,6 +26,20 @@ function showSection(section) {
             ? "none"
             : "block";
     section.style.display = "block";
+
+    if (section === authSection) {
+        section.style.display = "flex";
+        header.style.display = "none"
+    }
+    else if (section === profileSection){
+        section.style.display = "flex";
+        header.style.display = "flex"
+        }
+    else {
+        section.style.display = "block";
+        header.style.display = "flex"
+    }
+
 }
 
 function pushState(state, url) {
@@ -37,6 +51,8 @@ function hideAllSections() {
         (s) => (s.style.display = "none"),
     );
     document.querySelector(".hotels-section").style.display = "block";
+
+     header.style.display = "flex"
 }
 function showModal(html) {
     modal.innerHTML = `<div class="modal-content">${html}</div>`;
@@ -97,6 +113,12 @@ function renderAuthForm(skipHistory = false) {
     authSection.querySelector(".auth-login").onclick = async () => {
         const email = authSection.querySelector(".auth-email").value;
         const password = authSection.querySelector(".auth-password").value;
+        
+        if (!email || !password) {
+            Toast.error("Заполните email и пароль");
+            return;
+        }
+        
         try {
             const data = await API.login(email, password);
             setUser(data.user, data.token);
@@ -105,7 +127,8 @@ function renderAuthForm(skipHistory = false) {
             renderHotels();
             Toast.success("Вы успешно вошли!");
         } catch (err) {
-            Toast.error("Ошибка входа. Проверьте email и пароль");
+            const message = err?.error || err?.detail || "Проверьте email и пароль";
+            Toast.error(message);
         }
     };
     authSection.querySelector(".to-register").onclick = (e) => {
@@ -169,11 +192,11 @@ async function renderProfile(skipHistory = false) {
             <div class="profile-layout">
                 <div class="profile-left">
                     <div class="profile-avatar-large">${avatarInitial}</div>
+                    <h3 class="h3-profile-full_name">${user.full_name}</h3>
                     <div class="profile-role-badge">${roleText}</div>
                 </div>
                 <div class="profile-right">
                     <div class="profile-info-card">
-                        <h3>${user.full_name}</h3>
                         <div class="profile-details">
                             <div class="profile-detail-item">
                                 <span class="profile-detail-icon">📧</span>
@@ -252,17 +275,17 @@ async function renderHotels(skipHistory = false) {
         hotels.forEach((hotel) => {
             const card = document.createElement("div");
             card.className = "hotel-card";
+            card.style.cursor = "pointer";
             card.innerHTML = `
                 <div class="hotel-img" style="background-image:url('${hotel.hostel_images ? hotel.hostel_images.replace("http://localhost", "") : "https://source.unsplash.com/400x200/?hotel"}')"></div>
                 <div class="hotel-info">
                     <h2>${hotel.title}</h2>
                     <p><b>Город:</b> ${hotel.city || "—"}</p>
                     <p><b>Адрес:</b> ${hotel.address || "—"}</p>
-                    <button class="btn detail-btn">Подробнее</button>
+                    ${hotel.min_price ? `<p style="color: #000000; font-weight: bold; margin-top: 10px;">От ${hotel.min_price} ₽</p>` : ""}
                 </div>
             `;
-            card.querySelector(".detail-btn").onclick = () =>
-                renderHotelDetail(hotel);
+            card.onclick = () => renderHotelDetail(hotel);
             hotelsList.append(card);
         });
     } catch {
@@ -689,22 +712,57 @@ async function renderHotelDetail(hotel, skipHistory = false) {
             list.textContent = "Нет номеров";
             return;
         }
-        list.innerHTML = rooms
-            .map(
-                (r) => `
+        
+        // Создаем контейнер для первого номера и карточки владельца
+        list.innerHTML = '';
+        
+        rooms.forEach((r, index) => {
+            const roomCard = `
             <div class="room-card-detail" data-room-id='${r.id}'>
-                <div class="room-card-img" style="background-image:url('${r.room_images ? r.room_images.replace("http://localhost", "") : "https://source.unsplash.com/300x200/?room"}')"></div>
-                <div class="room-card-content">
-                    <h3>${r.type === "standard" ? "Стандартный" : "Люкс"}</h3>
-                    <p class="room-card-info">Количество мест: <b>${r.max_place || "—"}</b></p>
-                    <p class="room-card-info">Площадь: <b>${r.square || "—"} м²</b></p>
-                    <p class="room-card-price"><b>${r.price_on_one_day} руб</b> / день</p>
-                    ${isOwner ? `<div class="room-card-actions"><button class='btn-small edit-room-btn' data-room-id='${r.id}'>✏️</button><button class='btn-small delete-room-btn' data-room-id='${r.id}'>🗑️</button></div>` : `<button class='btn book-btn-small' data-room-id='${r.id}'>Забронировать</button>`}
+                <div class="room-card-left">
+                    <div class="room-card-img" style="background-image:url('${r.room_images ? r.room_images.replace("http://localhost", "") : "https://source.unsplash.com/250x200/?room"}')"></div>
+                </div>
+                <div class="room-card-middle">
+                    <div class="room-category">${r.type === "standard" ? "🏠 Стандартный" : "👑 Люкс"}</div>
+                    <div class="room-specs">
+                        <p class="room-spec-item">👥 Мест: <b>${r.max_place || "—"}</b></p>
+                        <p class="room-spec-item">📏 Площадь: <b>${r.square || "—"} м²</b></p>
+                    </div>
+                </div>
+                <div class="room-card-right">
+                    <div class="room-price-section">
+                        <p class="room-price"><b>${r.price_on_one_day} ₽</b></p>
+                        <p class="room-price-label">за ночь</p>
+                    </div>
+                    ${isOwner ? `<div class="room-card-actions"><button class='btn-small edit-room-btn' data-room-id='${r.id}'>✏️ Редактировать</button><button class='btn-small delete-room-btn' data-room-id='${r.id}' style="background:#dc3545;">🗑️ Удалить</button></div>` : `<button class='btn book-btn-small' data-room-id='${r.id}'>Забронировать</button>`}
                 </div>
             </div>
-        `,
-            )
-            .join("");
+        `;
+            
+            // Для первого номера - добавляем контейнер с владельцем
+            if (index === 0) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'rooms-first-wrapper';
+                wrapper.innerHTML = roomCard;
+                
+                // Добавляем карточку владельца
+                const ownerCard = document.createElement('div');
+                ownerCard.className = 'owner-card-standalone';
+                ownerCard.innerHTML = `
+                    <div class="owner-avatar">${hotel.owner_full_name ? hotel.owner_full_name.charAt(0).toUpperCase() : "?"}</div>
+                    <div class="owner-details">
+                        <div class="owner-name">${hotel.owner_full_name || "Владелец"}</div>
+                        ${hotel.owner_phone ? `<div class="owner-contact">📱</div><div class="owner-contact-text">${hotel.owner_phone}</div>` : ""}
+                        ${hotel.owner_email ? `<div class="owner-contact">📧</div><div class="owner-contact-text">${hotel.owner_email}</div>` : ""}
+                    </div>
+                `;
+                
+                wrapper.appendChild(ownerCard);
+                list.appendChild(wrapper);
+            } else {
+                list.insertAdjacentHTML('beforeend', roomCard);
+            }
+        });
 
         // Обработчики для открытия детального просмотра номера
         list.querySelectorAll(".room-card-detail").forEach((card) => {
@@ -1140,6 +1198,7 @@ function showEditRoomModal(hotel, room) {
         <label>Количество мест: <input type="number" class="room-max-place" min="1" value="${room.max_place}"></label>
         <label>Площадь (м²): <input type="number" class="room-square" min="1" value="${room.square}"></label>
         <label>Описание: <textarea class="room-description" rows="3">${room.description || ""}</textarea></label>
+        <label>Фото: <input type="file" class="room-image" multiple accept="image/*"></label>
         <button class="btn save-edit-room-btn">Сохранить</button>
         <button class="btn close-modal">Отмена</button>
     `);
@@ -1151,6 +1210,7 @@ function showEditRoomModal(hotel, room) {
         const max_place = modal.querySelector(".room-max-place").value.trim();
         const square = modal.querySelector(".room-square").value.trim();
         const description = modal.querySelector(".room-description").value.trim();
+        const imageFiles = modal.querySelector(".room-image").files;
         
         if (!title || !price || !max_place || !square || !description) {
             Toast.warning("Заполните все обязательные поля");
@@ -1158,14 +1218,28 @@ function showEditRoomModal(hotel, room) {
         }
         
         try {
-            await API.patch(`rooms/`, room.id, {
-                title: title,
-                type: type,
-                price_on_one_day: parseInt(price),
-                max_place: parseInt(max_place),
-                square: parseInt(square),
-                description: description
-            });
+            if (imageFiles.length > 0) {
+                const formData = new FormData();
+                formData.append("title", title);
+                formData.append("type", type);
+                formData.append("price_on_one_day", parseInt(price));
+                formData.append("max_place", parseInt(max_place));
+                formData.append("square", parseInt(square));
+                formData.append("description", description);
+                for (let file of imageFiles) {
+                    formData.append("room_images", file);
+                }
+                await API.postForm(`rooms/${room.id}/`, formData);
+            } else {
+                await API.patch(`rooms/`, room.id, {
+                    title: title,
+                    type: type,
+                    price_on_one_day: parseInt(price),
+                    max_place: parseInt(max_place),
+                    square: parseInt(square),
+                    description: description
+                });
+            }
             Toast.success("Номер обновлен");
             hideModal();
             await renderHotelDetail(hotel, true);
@@ -1188,7 +1262,7 @@ function showCreateRoomModal(hotel) {
         <label>Количество мест: <input type="number" class="room-max-place" min="1"></label>
         <label>Площадь (м²): <input type="number" class="room-square" min="1"></label>
         <label>Описание: <input type="text" class="room-description"></label>
-        <label>Фото: <input type="file" class="room-image" accept="image/*"></label>
+        <label>Фото (несколько): <input type="file" class="room-image" multiple accept="image/*"></label>
         <button class="btn confirm-create-room">Создать</button>
         <button class="btn close-modal">Отмена</button>
     `);
@@ -1231,22 +1305,67 @@ function showCreateRoomModal(hotel) {
                     return;
                 }
                 const user = getUser();
-                list.innerHTML = rooms
-                    .map(
-                        (r) => `
-                    <div class="room-card-detail">
-                        <div class="room-card-img" style="background-image:url('${r.room_images ? r.room_images.replace("http://localhost", "") : "https://source.unsplash.com/300x200/?room"}')"></div>
-                        <div class="room-card-content">
-                            <h3>${r.type === "standard" ? "Стандартный" : "Люкс"}</h3>
-                            <p class="room-card-info">Количество мест: <b>${r.max_place || "—"}</b></p>
-                            <p class="room-card-info">Площадь: <b>${r.square || "—"} м²</b></p>
-                            <p class="room-card-price"><b>${r.price_on_one_day} руб</b> / день</p>
-                            ${isOwner ? `<div class="room-card-actions"><button class='btn-small edit-room-btn' data-room-id='${r.id}'>✏️</button><button class='btn-small delete-room-btn' data-room-id='${r.id}'>🗑️</button></div>` : `<button class='btn book-btn-small' data-room-id='${r.id}'>Забронировать</button>`}
+                
+                list.innerHTML = '';
+                rooms.forEach((r, index) => {
+                    const roomCard = `
+                    <div class="room-card-detail" data-room-id='${r.id}'>
+                        <div class="room-card-left">
+                            <div class="room-card-img" style="background-image:url('${r.room_images ? r.room_images.replace("http://localhost", "") : "https://source.unsplash.com/250x200/?room"}')"></div>
+                        </div>
+                        <div class="room-card-middle">
+                            <div class="room-category">${r.type === "standard" ? "🏠 Стандартный" : "👑 Люкс"}</div>
+                            <div class="room-specs">
+                                <p class="room-spec-item">👥 Мест: <b>${r.max_place || "—"}</b></p>
+                                <p class="room-spec-item">📏 Площадь: <b>${r.square || "—"} м²</b></p>
+                            </div>
+                        </div>
+                        <div class="room-card-right">
+                            <div class="room-price-section">
+                                <p class="room-price"><b>${r.price_on_one_day} ₽</b></p>
+                                <p class="room-price-label">за ночь</p>
+                            </div>
+                            ${isOwner ? `<div class="room-card-actions"><button class='btn-small edit-room-btn' data-room-id='${r.id}'>✏️ Редактировать</button><button class='btn-small delete-room-btn' data-room-id='${r.id}' style="background:#dc3545;">🗑️ Удалить</button></div>` : `<button class='btn book-btn-small' data-room-id='${r.id}'>Забронировать</button>`}
                         </div>
                     </div>
-                `,
-                    )
-                    .join("");
+                `;
+                    
+                    // Для первого номера - добавляем контейнер с владельцем
+                    if (index === 0) {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'rooms-first-wrapper';
+                        wrapper.innerHTML = roomCard;
+                        
+                        // Добавляем карточку владельца
+                        const ownerCard = document.createElement('div');
+                        ownerCard.className = 'owner-card-standalone';
+                        ownerCard.innerHTML = `
+                            <div class="owner-avatar">${hotel.owner_full_name ? hotel.owner_full_name.charAt(0).toUpperCase() : "?"}</div>
+                            <div class="owner-details">
+                                <div class="owner-name">${hotel.owner_full_name || "Владелец"}</div>
+                                ${hotel.owner_phone ? `<div class="owner-contact">📱</div><div class="owner-contact-text">${hotel.owner_phone}</div>` : ""}
+                                ${hotel.owner_email ? `<div class="owner-contact">📧</div><div class="owner-contact-text">${hotel.owner_email}</div>` : ""}
+                            </div>
+                        `;
+                        
+                        wrapper.appendChild(ownerCard);
+                        list.appendChild(wrapper);
+                    } else {
+                        list.insertAdjacentHTML('beforeend', roomCard);
+                    }
+                });
+                
+                // Обработчики для открытия детального просмотра номера
+                list.querySelectorAll(".room-card-detail").forEach((card) => {
+                    card.onclick = (e) => {
+                        if (e.target.closest('.edit-room-btn') || e.target.closest('.delete-room-btn') || e.target.closest('.book-btn-small')) {
+                            return;
+                        }
+                        const roomId = card.getAttribute("data-room-id");
+                        const room = rooms.find((r) => r.id === roomId);
+                        showRoomDetailModal(room, hotel, isOwner);
+                    };
+                });
                 
                 // Обработчики для редактирования и удаления номеров (для владельца)
                 if (isOwner) {
@@ -1379,8 +1498,8 @@ function showEditHotelPage(hotel) {
                     <div class="current-image-preview" style="background-image:url('${hotel.hostel_images ? hotel.hostel_images.replace("http://localhost", "") : "https://source.unsplash.com/400x200/?hotel"}')"></div>
                 </div>
                 <div class="form-group">
-                    <label>Новое фото (необязательно)</label>
-                    <input type="file" class="hotel-image-input" accept="image/*">
+                    <label>Новые фото (несколько, необязательно)</label>
+                    <input type="file" class="hotel-image-input" multiple accept="image/*">
                 </div>
                 <div class="form-actions">
                     <button class="btn save-hotel-btn">Сохранить изменения</button>
@@ -1398,7 +1517,7 @@ function showEditHotelPage(hotel) {
         const city = hotelDetailSection.querySelector(".hotel-city-input").value.trim();
         const address = hotelDetailSection.querySelector(".hotel-address-input").value.trim();
         const description = hotelDetailSection.querySelector(".hotel-description-input").value.trim();
-        const imageFile = hotelDetailSection.querySelector(".hotel-image-input").files[0];
+        const imageFiles = hotelDetailSection.querySelector(".hotel-image-input").files;
         
         if (!title || !address || !description) {
             Toast.warning("Заполните обязательные поля: название, адрес, описание");
@@ -1406,13 +1525,15 @@ function showEditHotelPage(hotel) {
         }
         
         try {
-            if (imageFile) {
+            if (imageFiles.length > 0) {
                 const formData = new FormData();
                 formData.append("title", title);
                 formData.append("city", city);
                 formData.append("address", address);
                 formData.append("description", description);
-                formData.append("hostel_images", imageFile);
+                for (let file of imageFiles) {
+                    formData.append("hostel_images", file);
+                }
                 await API.postForm(`hotels/${hotel.id}/`, formData);
             } else {
                 await API.patch("hotels/", hotel.id, {
@@ -1466,7 +1587,7 @@ function showCreateHotelModal() {
         <label>Описание: <input type="text" class="hotel-description"></label>
         <label>Адрес: <input type="text" class="hotel-address"></label>
         <label>Город: <input type="text" class="hotel-city"></label>
-        <label>Фото: <input type="file" class="hotel-image" accept="image/*"></label>
+        <label>Фото (несколько): <input type="file" class="hotel-image" multiple accept="image/*"></label>
         <button class="btn confirm-create-hotel">Создать</button>
         <button class="btn close-modal">Отмена</button>
     `);
@@ -1478,9 +1599,9 @@ function showCreateHotelModal() {
             .value.trim();
         const address = modal.querySelector(".hotel-address").value.trim();
         const city = modal.querySelector(".hotel-city").value.trim();
-        const imageFile = modal.querySelector(".hotel-image").files[0];
-        if (!title || !description || !address || !imageFile) {
-            Toast.warning("Заполните все поля и выберите фото");
+        const imageFiles = modal.querySelector(".hotel-image").files;
+        if (!title || !description || !address || !imageFiles.length) {
+            Toast.warning("Заполните все поля и выберите минимум одно фото");
             return;
         }
         const formData = new FormData();
@@ -1488,7 +1609,9 @@ function showCreateHotelModal() {
         formData.append("description", description);
         formData.append("address", address);
         formData.append("city", city);
-        formData.append("hostel_images", imageFile);
+        for (let file of imageFiles) {
+            formData.append("hostel_images", file);
+        }
         try {
             await API.postForm("hotels/", formData);
             hideModal();

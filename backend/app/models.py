@@ -48,16 +48,26 @@ class CustomAuthenticationUser(AbstractUser):
 class Hotel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(CustomAuthenticationUser, on_delete=models.CASCADE, related_name='owner', verbose_name='Владелец')
-    hostel_images = models.ImageField(unique=True, blank=True, null=True, verbose_name='Фотография')
+    hostel_images = models.ImageField(blank=True, null=True, verbose_name='Фотография')
     title = models.CharField(max_length=128, unique=True, verbose_name='Название')
     description = models.TextField(verbose_name='Описание отеля')
     address = models.TextField(verbose_name='Адрес')
     city = models.CharField(max_length=128, blank=True, default='', verbose_name='Город')
     rating = models.FloatField(default=0.0, verbose_name='Рейтинг')
+    min_price = models.IntegerField(default=0, verbose_name='Минимальная цена за ночь')
     created_at = models.DateField(auto_now_add=True, verbose_name='Дата создания отеля')
 
     def __str__(self):
         return f'Владелец гостиницы {self.owner} владее гостиницей {self.title} с рейтингом {self.rating}'
+
+
+class HotelImage(models.Model):
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='images', verbose_name='Отель')
+    image = models.ImageField(upload_to='hotel_images/', verbose_name='Фотография отеля')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Фото отеля {self.hotel.title}'
 
 TYPE = [
     ('standard', 'Стандартный'),
@@ -70,14 +80,23 @@ class Room(models.Model):
     max_place = models.PositiveSmallIntegerField(verbose_name='Количество мест')
     square = models.PositiveSmallIntegerField(verbose_name='Жилая площадь')
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_room',  verbose_name='Отель')
-    room_images = models.ImageField(unique=True, verbose_name='Фотограции номера')
+    room_images = models.ImageField(blank=True, null=True, verbose_name='Фотография номера')
     type  = models.CharField(choices=TYPE, verbose_name='Тип номера')
     price_on_one_day = models.IntegerField(verbose_name='Цена номера за день')
     description = models.TextField(verbose_name='Описание номера')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='врумя создания команты')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='время создания комнаты')
 
     def __str__(self):
-        return f'Номера {self.type} стоит {self.price_on_one_day}'
+        return f'Номер {self.type} стоит {self.price_on_one_day}'
+
+
+class RoomImage(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='images', verbose_name='Номер')
+    image = models.ImageField(upload_to='room_images/', verbose_name='Фотография номера')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Фото номера {self.room.title}'
 
 class Booking(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -110,7 +129,7 @@ class Review(models.Model):
     comment_text = models.TextField(verbose_name='Комментарий')
 
     def __str__(self):
-        return f'Пользователь {self.user} отсавил отзыв: {self.text} гостинице {self.hotel}'
+        return f'Пользователь {self.user} отсавил отзыв: {self.comment_text} гостинице {self.hotel}'
 
 
 class Dish(models.Model):

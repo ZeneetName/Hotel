@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.db.models import ExpressionWrapper, F, Avg, DecimalField
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.authentication import authenticate
@@ -61,7 +61,7 @@ class AuthRegisterViewSets(viewsets.ModelViewSet):
             user = authenticate(**serializer.validated_data)
 
             if not user:
-                return Response("Пользователь не зарегестрирован или пароль некорректный")
+                return Response({"error": "Пользователь не зарегестрирован или введены некорректные данные"}, status=401)
             token, created = Token.objects.get_or_create(user=user)
 
             return Response({
@@ -147,6 +147,25 @@ class HotelViewSets(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        hotel = self.perform_create(serializer)
+        
+        # Обработка нескольких файлов
+        images = request.FILES.getlist('hostel_images')
+        if images:
+            # Первое изображение сохраняется в основное поле
+            hotel.hostel_images = images[0]
+            hotel.save()
+            # Остальные изображения сохраняются в HotelImage
+            for img in images[1:]:
+                from .models import HotelImage
+                HotelImage.objects.create(hotel=hotel, image=img)
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     @action(methods=['get'], detail=False)
     def final_rating(self, request):
         queryset = self.queryset
@@ -167,10 +186,21 @@ class HotelViewSets(viewsets.ModelViewSet):
 
                 serializer = RoomSerializer(data=request.data)
                 serializer.is_valid(raise_exception=True)
-                serializer.save(hotel=hotel)
+                room = serializer.save(hotel=hotel)
+                
+                # Обработка нескольких файлов
+                images = request.FILES.getlist('room_images')
+                if images:
+                    # Первое изображение сохраняется в основное поле
+                    room.room_images = images[0]
+                    room.save()
+                    # Остальные изображения сохраняются в RoomImage
+                    for img in images[1:]:
+                        from .models import RoomImage
+                        RoomImage.objects.create(room=room, image=img)
 
                 return Response({
-                    "detail": 'Успешное создание коматы',
+                    "detail": 'Успешное создание комнаты',
                     "data": serializer.data,
                 })
             if request.method == 'GET':
