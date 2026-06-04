@@ -1613,9 +1613,9 @@ function showDeleteHotelConfirm(hotel) {
 
 function showCreateHotelModal() {
     showModal(`
-        <h2>Добавить жильё</h2>
+        <h2>Добавить объявление</h2>
         <label>Название: <input type="text" class="hotel-title"></label>
-        <label>Описание: <input type="text" class="hotel-description"></label>
+        <label>Описание: <input type="text" class="hotel-description desc_hotel_add"></label>
         <label>Адрес: <input type="text" class="hotel-address"></label>
         <label>Город: <input type="text" class="hotel-city"></label>
         <label>Фото (несколько): <input type="file" class="hotel-image" multiple accept="image/*"></label>
