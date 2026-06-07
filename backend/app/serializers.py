@@ -1,6 +1,22 @@
+import json
+
 from rest_framework import serializers
 from .models import Dish, Service, CustomAuthenticationUser, Hotel, Room, Review, Booking
 from .utils import room_is_available
+
+
+class AmenitiesField(serializers.JSONField):
+    """Принимает как список (JSON-тело), так и JSON-строку (multipart-форма)."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except ValueError:
+                raise serializers.ValidationError("Некорректный формат удобств")
+        if not isinstance(data, list):
+            raise serializers.ValidationError("Удобства должны быть списком")
+        return [str(item) for item in data]
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -42,11 +58,16 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(required=True)
 
 class HotelSerializer(serializers.ModelSerializer):
+    owner_full_name = serializers.CharField(source="owner.full_name", read_only=True)
+    owner_phone = serializers.CharField(source="owner.phone", read_only=True)
+
     class Meta:
         model = Hotel
         fields = [
             "id",
             "owner",
+            "owner_full_name",
+            "owner_phone",
             "hostel_images",
             "title",
             "description",
@@ -62,24 +83,38 @@ class HotelSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Название отеля должно быть больше 1 символа")
 
 
-        read_only_fields = ["id", "created_at", "rating", "owner"]
+        read_only_fields = ["id", "created_at", "rating", "owner", "owner_full_name", "owner_phone"]
 
 class RoomSerializer(serializers.ModelSerializer):
+    images = serializers.SerializerMethodField()
+    amenities = AmenitiesField(required=False)
+
     class Meta:
         model = Room
         fields = [
             "id",
             "hotel",
             "room_images",
+            "images",
             "title",
             "type",
             "price_on_one_day",
             "max_place",
             "square",
             "description",
+            "amenities",
             "created_at",
         ]
-        read_only_fields = ["id", "created_at", "hotel"]
+        read_only_fields = ["id", "created_at", "hotel", "images"]
+
+    def get_images(self, obj):
+        urls = []
+        if obj.room_images:
+            urls.append(obj.room_images.url)
+        for extra in obj.images.all():
+            if extra.image:
+                urls.append(extra.image.url)
+        return urls
 
 
 class BookingSerializer(serializers.ModelSerializer):

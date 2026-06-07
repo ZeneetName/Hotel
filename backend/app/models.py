@@ -84,6 +84,7 @@ class Room(models.Model):
     type  = models.CharField(choices=TYPE, verbose_name='Тип номера')
     price_on_one_day = models.IntegerField(verbose_name='Цена номера за день')
     description = models.TextField(verbose_name='Описание номера')
+    amenities = models.JSONField(default=list, blank=True, verbose_name='Удобства')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='время создания комнаты')
 
     def __str__(self):

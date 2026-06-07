@@ -14,6 +14,10 @@ media/
 static/
 .env
 
+# Frontend static assets are part of the app (served by nginx), keep them tracked
+!frontend/static/
+!frontend/static/**
+
 # IDEs
 .vscode/
 .idea/

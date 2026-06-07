@@ -92,6 +92,13 @@ class AuthRegisterViewSets(viewsets.ModelViewSet):
             return Response({'error': str(e)})
 
 
+def _recalc_hotel_rating(hotel):
+    """Пересчитывает средний рейтинг отеля по оценкам отзывов."""
+    avg = hotel.hotel_reviews.aggregate(avg=Avg("score"))["avg"] or 0
+    hotel.rating = round(avg, 1)
+    hotel.save(update_fields=["rating"])
+
+
 def _parse_search_dates(request):
     check_in_raw = request.query_params.get("check_in")
     check_out_raw = request.query_params.get("check_out")
@@ -234,6 +241,7 @@ class HotelViewSets(viewsets.ModelViewSet):
             serializer = ReviewSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save(hotel=hotel, user=request.user)
+            _recalc_hotel_rating(hotel)
 
             return Response({
                 'message': 'Отзыв успешно добавлен',
@@ -265,6 +273,7 @@ class HotelViewSets(viewsets.ModelViewSet):
             serializer = ReviewSerializer(review, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            _recalc_hotel_rating(hotel)
 
             return Response({
                 'message': 'Отзыв успешно обновлен',
@@ -285,6 +294,7 @@ class HotelViewSets(viewsets.ModelViewSet):
                 return Response({'error': 'Вы можете удалять только свои отзывы'}, status=403)
 
             review.delete()
+            _recalc_hotel_rating(hotel)
 
             return Response({'message': 'Отзыв удален'}, status=204)
 
