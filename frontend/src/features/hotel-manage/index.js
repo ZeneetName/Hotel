@@ -3,6 +3,7 @@ import { showSection, hideAllSections, hotelDetailSection, modal } from "../../s
 import { pushState } from "../../shared/lib/history.js";
 import Toast from "../../shared/ui/toast.js";
 import { hotelApi } from "../../entities/hotel/api.js";
+import { fileFieldHtml } from "../../shared/ui/fileField.js";
 import { renderHotels } from "../../pages/hotels/index.js";
 import { renderHotelDetail } from "../../pages/hotel-detail/index.js";
 
@@ -10,10 +11,12 @@ export function showCreateHotelModal() {
     showModal(`
         <h2>Добавить объявление</h2>
         <label>Название: <input type="text" class="hotel-title"></label>
-        <label>Описание: <input type="text" class="hotel-description desc_hotel_add"></label>
+        <label>Описание:
+            <textarea class="hotel-description desc_hotel_add" rows="6" placeholder="Расскажите о вашем жилье..."></textarea>
+        </label>
         <label>Адрес: <input type="text" class="hotel-address"></label>
         <label>Город: <input type="text" class="hotel-city"></label>
-        <label>Фото (несколько): <input type="file" class="hotel-image" multiple accept="image/*"></label>
+        ${fileFieldHtml("Фото", "hotel-image", { multiple: true })}
         <button class="btn confirm-create-hotel">Создать</button>
         <button class="btn close-modal">Отмена</button>
     `);
@@ -56,36 +59,44 @@ export function showEditHotelPage(hotel) {
 
     hotelDetailSection.innerHTML = `
         <div class="edit-hotel-page">
-            <button class="btn back-btn">← Назад к гостинице</button>
-            <h1>Редактирование гостиницы</h1>
+            <div class="edit-hotel-head">
+                <button class="edit-hotel-back back-btn">← Назад к гостинице</button>
+                <span class="edit-hotel-eyebrow">Управление объектом</span>
+                <h1 class="edit-hotel-title">Редактирование гостиницы</h1>
+                <p class="edit-hotel-sub">Обновите информацию — изменения сразу увидят гости</p>
+            </div>
             <div class="edit-hotel-form">
                 <div class="form-group">
                     <label>Название гостиницы</label>
-                    <input type="text" class="hotel-title-input" value="${hotel.title || ""}" placeholder="Введите название">
+                    <input type="text" class="hotel-title-input" value="${hotel.title || ""}" placeholder="Например, Гранд Отель">
                 </div>
                 <div class="form-group">
                     <label>Город</label>
-                    <input type="text" class="hotel-city-input" value="${hotel.city || ""}" placeholder="Введите город">
+                    <input type="text" class="hotel-city-input" value="${hotel.city || ""}" placeholder="Например, Москва">
                 </div>
-                <div class="form-group">
+                <div class="form-group form-group--full">
                     <label>Адрес</label>
-                    <input type="text" class="hotel-address-input" value="${hotel.address || ""}" placeholder="Введите адрес">
+                    <input type="text" class="hotel-address-input" value="${hotel.address || ""}" placeholder="Улица, дом">
                 </div>
-                <div class="form-group">
+                <div class="form-group form-group--full">
                     <label>Описание</label>
-                    <textarea class="hotel-description-input" rows="6" placeholder="Введите описание">${hotel.description || ""}</textarea>
+                    <textarea class="hotel-description-input" rows="6" placeholder="Расскажите гостям о вашем жилье...">${hotel.description || ""}</textarea>
                 </div>
-                <div class="form-group">
+                <div class="form-group form-group--full">
                     <label>Текущее фото</label>
                     <div class="current-image-preview" style="background-image:url('${hotel.hostel_images ? hotel.hostel_images.replace("http://localhost", "") : "https://source.unsplash.com/400x200/?hotel"}')"></div>
                 </div>
-                <div class="form-group">
-                    <label>Новые фото (несколько, необязательно)</label>
-                    <input type="file" class="hotel-image-input" multiple accept="image/*">
+                <div class="form-group form-group--full">
+                    <label>Новые фото <span class="form-hint">несколько, необязательно</span></label>
+                    <label class="file-drop">
+                        <span class="file-drop-ic">⬆</span>
+                        <span class="file-drop-text">Нажмите, чтобы выбрать фотографии</span>
+                        <input type="file" class="hotel-image-input" multiple accept="image/*">
+                    </label>
                 </div>
                 <div class="form-actions">
-                    <button class="btn save-hotel-btn">Сохранить изменения</button>
-                    <button class="btn cancel-edit-btn">Отмена</button>
+                    <button class="save-hotel-btn">Сохранить изменения</button>
+                    <button class="cancel-edit-btn">Отмена</button>
                 </div>
             </div>
         </div>
@@ -93,6 +104,15 @@ export function showEditHotelPage(hotel) {
 
     hotelDetailSection.querySelector(".back-btn").onclick = () => renderHotelDetail(hotel);
     hotelDetailSection.querySelector(".cancel-edit-btn").onclick = () => renderHotelDetail(hotel);
+
+    const fileInput = hotelDetailSection.querySelector(".hotel-image-input");
+    const fileText = hotelDetailSection.querySelector(".file-drop-text");
+    fileInput.onchange = () => {
+        const n = fileInput.files.length;
+        fileText.textContent = n
+            ? `Выбрано фото: ${n}`
+            : "Нажмите, чтобы выбрать фотографии";
+    };
 
     hotelDetailSection.querySelector(".save-hotel-btn").onclick = async () => {
         const title = hotelDetailSection.querySelector(".hotel-title-input").value.trim();

@@ -1,4 +1,5 @@
 import { btnLogin, btnProfile, btnBookings, btnCreateHotel } from "../../shared/ui/dom.js";
+import { getBookingScope } from "../../entities/booking/scope.js";
 
 export function setHeaderAuth(isAuth) {
     btnLogin.style.display = isAuth ? "none" : "inline-block";
@@ -8,4 +9,13 @@ export function setHeaderAuth(isAuth) {
     const canCreate =
         isAuth && user && (user.roles === "Admin" || user.roles === "Owner");
     btnCreateHotel.style.display = canCreate ? "block" : "none";
+
+    // Владельцу гостиниц/админу показываем «Бронирования гостиниц» вместо «Мои бронирования».
+    if (isAuth) {
+        getBookingScope().then((scope) => {
+            btnBookings.textContent = `🗓️ ${scope.label}`;
+        });
+    } else {
+        btnBookings.textContent = "🗓️ Мои бронирования";
+    }
 }

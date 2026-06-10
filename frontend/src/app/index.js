@@ -32,8 +32,16 @@ btnBookings.onclick = renderBookings;
 btnCreateHotel.onclick = showCreateHotelModal;
 
 // Маркетинговый CTA «Добавить жильё» на главной — тот же поток создания.
+// Неавторизованного гостя сначала отправляем на аутентификацию.
 const homeCtaBtn = document.querySelector(".home-cta-btn");
-if (homeCtaBtn) homeCtaBtn.onclick = showCreateHotelModal;
+if (homeCtaBtn)
+    homeCtaBtn.onclick = () => {
+        if (!getUser()) {
+            renderAuthForm();
+            return;
+        }
+        showCreateHotelModal();
+    };
 modal.onclick = (e) => {
     if (e.target === modal) {
         hideModal();

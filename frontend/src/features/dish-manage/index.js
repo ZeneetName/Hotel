@@ -2,6 +2,7 @@ import { showModal, hideModal } from "../../shared/ui/modal.js";
 import { modal, hotelDetailSection } from "../../shared/ui/dom.js";
 import Toast from "../../shared/ui/toast.js";
 import { dishApi } from "../../entities/dish/api.js";
+import { fileFieldHtml } from "../../shared/ui/fileField.js";
 import { renderHotelDetail } from "../../pages/hotel-detail/index.js";
 
 function openMenuTab() {
@@ -15,10 +16,10 @@ export function showCreateDishModal(hotel) {
     showModal(`
         <h2>Добавить блюдо</h2>
         <input type="text" class="dish-title" placeholder="Название блюда">
-        <textarea class="dish-composition" placeholder="Состав блюда..." rows="3"></textarea>
+        <textarea class="dish-composition" placeholder="Состав блюда..." rows="5"></textarea>
         <label>Вес (г): <input type="number" class="dish-weight" min="1"></label>
         <label>Цена (₽): <input type="number" class="dish-price" min="0"></label>
-        <label>Фото: <input type="file" class="dish-image" accept="image/*"></label>
+        ${fileFieldHtml("Фото", "dish-image")}
         <button class="btn save-dish-btn">Сохранить</button>
         <button class="btn close-modal">Отмена</button>
     `);
@@ -62,11 +63,11 @@ export function showEditDishModal(hotel, dish) {
     showModal(`
         <h2>Редактировать блюдо</h2>
         <input type="text" class="edit-dish-title" value="${dish.title}" placeholder="Название блюда">
-        <textarea class="edit-dish-composition" rows="3">${dish.composition}</textarea>
+        <textarea class="edit-dish-composition" rows="5">${dish.composition}</textarea>
         <label>Вес (г): <input type="number" class="edit-dish-weight" value="${dish.weight}" min="1"></label>
         <label>Цена (₽): <input type="number" class="edit-dish-price" value="${dish.price}" min="0"></label>
         ${dish.dish_images ? `<img src="${dish.dish_images}" class="dish-image-preview" alt="Текущее фото">` : ""}
-        <label>Новое фото: <input type="file" class="edit-dish-image" accept="image/*"></label>
+        ${fileFieldHtml("Новое фото", "edit-dish-image")}
         <button class="btn save-edit-dish-btn">Сохранить</button>
         <button class="btn close-modal">Отмена</button>
     `);

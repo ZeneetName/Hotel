@@ -1,4 +1,5 @@
 import json
+import re
 
 from rest_framework import serializers
 from .models import Dish, Service, CustomAuthenticationUser, Hotel, Room, Review, Booking
@@ -6,7 +7,6 @@ from .utils import room_is_available
 
 
 class AmenitiesField(serializers.JSONField):
-    """Принимает как список (JSON-тело), так и JSON-строку (multipart-форма)."""
 
     def to_internal_value(self, data):
         if isinstance(data, str):
@@ -21,8 +21,13 @@ class AmenitiesField(serializers.JSONField):
 
 class RegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
-    password = serializers.CharField(required=True)
-    phone = serializers.CharField(max_length=12, required=False, default="")
+    password = serializers.CharField(required=True, write_only=True)
+    phone = serializers.CharField(required=True)
+    roles = serializers.ChoiceField(
+        choices=[("Default_user", "Default_user"), ("Owner", "Owner")],
+        required=False,
+        default="Default_user",
+    )
 
     class Meta:
         model = CustomAuthenticationUser
@@ -35,7 +40,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
             "roles"
         ]
 
-        read_only_fields = ['id', 'roles']
+        read_only_fields = ['id']
 
     def validate_password(self, value):
         if len(value) < 5:
@@ -43,11 +48,16 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def validate_phone(self, value):
-        if not (value[0] == '+' and value[1] == '7'):
-            raise serializers.ValidationError("Номер телефона должен начинаться с +7")
-        if len(value) > 12:
-            raise serializers.ValidationError("Номер телефона не должен превышать длину в 12 цифор")
-        return value
+        if not value:
+            raise serializers.ValidationError("Укажите номер телефона")
+        digits = re.sub(r"\D", "", value)
+        if digits.startswith("8"):
+            digits = "7" + digits[1:]
+        if not digits.startswith("7") or len(digits) != 11:
+            raise serializers.ValidationError(
+                "Введите корректный номер телефона: +7 и ещё 10 цифр"
+            )
+        return "+" + digits
 
     def create(self, validated_data):
         return CustomAuthenticationUser.objects.create_user(**validated_data)
@@ -60,6 +70,11 @@ class LoginSerializer(serializers.Serializer):
 class HotelSerializer(serializers.ModelSerializer):
     owner_full_name = serializers.CharField(source="owner.full_name", read_only=True)
     owner_phone = serializers.CharField(source="owner.phone", read_only=True)
+    min_price = serializers.SerializerMethodField()
+
+    def get_min_price(self, obj):
+        prices = [room.price_on_one_day for room in obj.hotel_room.all()]
+        return min(prices) if prices else 0
 
     class Meta:
         model = Hotel
@@ -120,12 +135,16 @@ class RoomSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     room_title = serializers.CharField(source="room.title", read_only=True)
     hotel_name = serializers.CharField(source="room.hotel.title", read_only=True)
-    
+    user_name = serializers.CharField(source="user.full_name", read_only=True)
+    user_email = serializers.CharField(source="user.email", read_only=True)
+
     class Meta:
         model = Booking
         fields = [
             "id",
             "user",
+            "user_name",
+            "user_email",
             "room",
             "room_title",
             "hotel_name",
@@ -135,7 +154,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "created_at",
             "total_days",
         ]
-        read_only_fields = ["id", "created_at", "total_price", "total_days", "room", "user", "room_title", "hotel_name"]
+        read_only_fields = ["id", "created_at", "total_price", "total_days", "room", "user", "room_title", "hotel_name", "user_name", "user_email"]
 
     def validate(self, attrs):
         check_in = attrs.get("check_in") or getattr(self.instance, "check_in", None)

@@ -34,7 +34,7 @@ class CustomAuthenticationUser(AbstractUser):
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True, verbose_name='Почта')
-    full_name  = models.CharField(max_length=64, unique=True, verbose_name='Польное имя')
+    full_name  = models.CharField(max_length=64, verbose_name='Польное имя')
     phone  = models.CharField(max_length=256, unique=True, verbose_name='Номер телефона')
     roles = models.CharField(choices=ROLES, verbose_name='Роли пользователей', default='Default_user')
 

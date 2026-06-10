@@ -46,7 +46,14 @@ class CREATEUPDATEDELETE_FOR_OWNERHOTEL_AND_ADMIN_For_Booking_and_Room(BasePermi
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
-        return (request.user.roles == "Owner" and obj.hotel.owner == request.user) or (request.user.roles == 'Admin')
+        if request.user.roles == 'Admin':
+            return True
+        # Объект может быть номером (obj.hotel) или бронированием (obj.room.hotel).
+        hotel = getattr(obj, 'hotel', None)
+        if hotel is None:
+            room = getattr(obj, 'room', None)
+            hotel = getattr(room, 'hotel', None)
+        return request.user.roles == 'Owner' and hotel is not None and hotel.owner == request.user
 
 
 class Create_Get_Reviews(BasePermission):

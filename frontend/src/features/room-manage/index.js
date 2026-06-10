@@ -2,6 +2,7 @@ import { showModal, hideModal } from "../../shared/ui/modal.js";
 import { modal } from "../../shared/ui/dom.js";
 import Toast from "../../shared/ui/toast.js";
 import { roomApi } from "../../entities/room/api.js";
+import { fileFieldHtml } from "../../shared/ui/fileField.js";
 import { amenitiesCheckboxesHtml, getSelectedAmenities } from "../../entities/room/amenities.js";
 import { renderHotelDetail } from "../../pages/hotel-detail/index.js";
 
@@ -18,10 +19,12 @@ export function showEditRoomModal(hotel, room) {
         <label>Цена за день (₽): <input type="number" class="room-price" value="${room.price_on_one_day}"></label>
         <label>Количество мест: <input type="number" class="room-max-place" min="1" value="${room.max_place}"></label>
         <label>Площадь (м²): <input type="number" class="room-square" min="1" value="${room.square}"></label>
-        <label>Описание: <textarea class="room-description" rows="3">${room.description || ""}</textarea></label>
+        <label>Описание:
+            <textarea class="room-description" rows="6">${room.description || ""}</textarea>
+        </label>
         <div class="amenities-label">Удобства:</div>
         ${amenitiesCheckboxesHtml(Array.isArray(room.amenities) ? room.amenities : [])}
-        <label>Фото: <input type="file" class="room-image" multiple accept="image/*"></label>
+        ${fileFieldHtml("Фото", "room-image", { multiple: true })}
         <button class="btn save-edit-room-btn">Сохранить</button>
         <button class="btn close-modal">Отмена</button>
     `);
@@ -87,10 +90,12 @@ export function showCreateRoomModal(hotel) {
         <label>Цена за день: <input type="number" class="room-price"></label>
         <label>Количество мест: <input type="number" class="room-max-place" min="1"></label>
         <label>Площадь (м²): <input type="number" class="room-square" min="1"></label>
-        <label>Описание: <input type="text" class="room-description"></label>
+        <label>Описание:
+            <textarea class="room-description" rows="6" placeholder="Опишите номер..."></textarea>
+        </label>
         <div class="amenities-label">Удобства:</div>
         ${amenitiesCheckboxesHtml()}
-        <label>Фото (несколько): <input type="file" class="room-image" multiple accept="image/*"></label>
+        ${fileFieldHtml("Фото", "room-image", { multiple: true })}
         <button class="btn confirm-create-room">Создать</button>
         <button class="btn close-modal">Отмена</button>
     `);

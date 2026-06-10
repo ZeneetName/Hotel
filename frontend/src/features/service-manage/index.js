@@ -2,6 +2,7 @@ import { showModal, hideModal } from "../../shared/ui/modal.js";
 import { modal, hotelDetailSection } from "../../shared/ui/dom.js";
 import Toast from "../../shared/ui/toast.js";
 import { serviceApi } from "../../entities/service/api.js";
+import { fileFieldHtml } from "../../shared/ui/fileField.js";
 
 function openServicesTab() {
     const servicesBtn = hotelDetailSection.querySelector(
@@ -16,7 +17,7 @@ export function showCreateServiceModal(hotel) {
         <input type="text" class="service-title" placeholder="Название услуги">
         <label>Цена (₽): <input type="number" class="service-price" min="0"></label>
         <label>Длительность (мин): <input type="number" class="service-duration" min="1"></label>
-        <label>Фото: <input type="file" class="service-image" accept="image/*"></label>
+        ${fileFieldHtml("Фото", "service-image")}
         <button class="btn save-service-btn">Сохранить</button>
         <button class="btn close-modal">Отмена</button>
     `);
@@ -58,7 +59,7 @@ export function showEditServiceModal(hotel, service) {
         <label>Цена (₽): <input type="number" class="edit-service-price" value="${service.price}" min="0"></label>
         <label>Длительность (мин): <input type="number" class="edit-service-duration" value="${service.duration}" min="1"></label>
         ${service.service_images ? `<img src="${service.service_images}" class="service-image-preview" alt="Текущее фото">` : ""}
-        <label>Новое фото: <input type="file" class="edit-service-image" accept="image/*"></label>
+        ${fileFieldHtml("Новое фото", "edit-service-image")}
         <button class="btn save-edit-service-btn">Сохранить</button>
         <button class="btn close-modal">Отмена</button>
     `);

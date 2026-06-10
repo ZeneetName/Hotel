@@ -9,12 +9,15 @@ import { dishApi } from "../../entities/dish/api.js";
 import { serviceApi } from "../../entities/service/api.js";
 import { reviewApi } from "../../entities/review/api.js";
 import { renderHotels } from "../hotels/index.js";
+import { renderBookings } from "../bookings/index.js";
+import { renderAuthForm } from "../../features/auth/index.js";
 import { showEditHotelPage, showDeleteHotelConfirm } from "../../features/hotel-manage/index.js";
 import { showCreateRoomModal, showEditRoomModal, showDeleteRoomConfirm } from "../../features/room-manage/index.js";
 import { showBookingModalForRoom } from "../../features/booking/index.js";
 import { showCreateDishModal, showEditDishModal } from "../../features/dish-manage/index.js";
 import { showCreateServiceModal, showEditServiceModal } from "../../features/service-manage/index.js";
 import { showRoomDetailModal } from "../../widgets/room-detail-modal/index.js";
+import { setupRoomCarousel } from "../../widgets/room-carousel/index.js";
 import { loadReviews } from "../../widgets/reviews/index.js";
 
 const noImg = (url) =>
@@ -52,7 +55,7 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                     ${isOwner
             ? `<button class="hd-nav-btn edit-hotel-btn">✎ Редактировать</button>
                            ${btnDeleteHtml.replace('class="button"', 'class="button delete-hotel-btn"')}`
-            : `<button class="hd-nav-btn hd-nav-ghost">♡ Сохранить</button>
+            : `<button class="hd-nav-btn hd-nav-ghost hd-bookings-btn">🗓 Мои бронирования</button>
                            <button class="hd-nav-btn hd-nav-ghost">↗ Поделиться</button>`}
                 </div>
             </div>
@@ -61,7 +64,7 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
         <div class="hd-container">
             <header class="hd-head">
                 <div class="hd-eyebrow">
-                    <span class="hd-badge">5 ЗВЁЗД</span>
+                    <span class="hd-badge">${ratingNum > 0 ? `★ ${ratingText} из 5` : "Нет оценок"}</span>
                     <span class="hd-editor">🏆 Выбор редакции 2026</span>
                 </div>
                 <h1 class="hd-title">${hotel.title}</h1>
@@ -195,6 +198,11 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
 
     // ---- Navigation / owner controls ----
     hotelDetailSection.querySelector(".back-btn").onclick = () => renderHotels();
+
+    // Кнопка «Мои бронирования» (для не-владельцев). Гостя без сессии — на вход.
+    const bookingsBtn = hotelDetailSection.querySelector(".hd-bookings-btn");
+    if (bookingsBtn)
+        bookingsBtn.onclick = () => (user ? renderBookings() : renderAuthForm());
 
     if (isOwner) {
         const editHotelBtn = hotelDetailSection.querySelector(".edit-hotel-btn");
@@ -426,11 +434,30 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
         } else {
             list.innerHTML = rooms
                 .map((r) => {
-                    const img = noImg(r.room_images);
+                    const imgs = (Array.isArray(r.images) ? r.images : [])
+                        .map(noImg)
+                        .filter(Boolean);
+                    if (!imgs.length && r.room_images) imgs.push(noImg(r.room_images));
                     const typeLabel = r.type === "standard" ? "Стандартный" : "Люкс";
+                    const mediaHtml =
+                        imgs.length > 1
+                            ? `<div class="hd-room-media">
+                        <div class="room-carousel" data-index="0">
+                            <div class="room-carousel-track">
+                                ${imgs.map((s) => `<div class="room-carousel-slide" style="background-image:url('${s}')"></div>`).join("")}
+                            </div>
+                            <button class="room-carousel-btn room-carousel-prev" aria-label="Предыдущее фото">‹</button>
+                            <button class="room-carousel-btn room-carousel-next" aria-label="Следующее фото">›</button>
+                            <div class="room-carousel-counter"><span class="room-carousel-current">1</span> / ${imgs.length}</div>
+                            <div class="room-carousel-dots">
+                                ${imgs.map((_, i) => `<span class="room-carousel-dot${i === 0 ? " active" : ""}" data-dot="${i}"></span>`).join("")}
+                            </div>
+                        </div>
+                    </div>`
+                            : `<div class="hd-room-img" style="${imgs[0] ? `background-image:url('${imgs[0]}')` : ""}"></div>`;
                     return `
                     <div class="hd-room room-card-detail" data-room-id="${r.id}">
-                        <div class="hd-room-img" style="${img ? `background-image:url('${img}')` : ""}"></div>
+                        ${mediaHtml}
                         <div class="hd-room-body">
                             <div>
                                 <h3 class="hd-room-name">${typeLabel}</h3>
@@ -455,13 +482,21 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                 .join("");
         }
 
-        // Card click → room detail modal
+        // Inline photo carousels on the room cards (left/right arrows)
+        list.querySelectorAll(".hd-room .room-carousel").forEach((carouselEl) => {
+            const count = carouselEl.querySelectorAll(".room-carousel-slide").length;
+            setupRoomCarousel(carouselEl, count);
+        });
+
+        // Card click → room detail modal (ignore carousel controls)
         list.querySelectorAll(".room-card-detail").forEach((card) => {
             card.onclick = (e) => {
                 if (
                     e.target.closest(".edit-room-btn") ||
                     e.target.closest(".delete-room-btn") ||
-                    e.target.closest(".book-btn-small")
+                    e.target.closest(".book-btn-small") ||
+                    e.target.closest(".room-carousel-btn") ||
+                    e.target.closest(".room-carousel-dot")
                 )
                     return;
                 const room = rooms.find((r) => r.id == card.getAttribute("data-room-id"));

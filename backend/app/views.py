@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.authentication import authenticate
 from rest_framework.authtoken.models import Token
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import Hotel, Room, Review, Booking, Dish, Service
@@ -117,7 +118,7 @@ def _parse_search_dates(request):
 
 
 class HotelViewSets(viewsets.ModelViewSet):
-    queryset = Hotel.objects.all()
+    queryset = Hotel.objects.prefetch_related("hotel_room").all()
     serializer_class = HotelSerializer
     permission_classes = [AllowAny]
 
@@ -387,17 +388,26 @@ class RoomViewSets(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=400)
 
 
+class BookingPagination(PageNumberPagination):
+    """Постраничная выдача бронирований (для бесконечной прокрутки у админа)."""
+    page_size = 8
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+
 class BookingViewSets(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated, CREATEUPDATEDELETE_FOR_OWNERHOTEL_AND_ADMIN_For_Booking_and_Room]
+    pagination_class = BookingPagination
 
     def get_queryset(self):
+        base = Booking.objects.select_related('room', 'room__hotel', 'user')
         if self.request.user.roles == 'Default_user':
-            return Booking.objects.filter(user=self.request.user)
-        if self.request.user.roles == 'Owner':
-            return Booking.objects.filter(room__hotel__owner=self.request.user)
-        return Booking.objects.all()
+            base = base.filter(user=self.request.user)
+        elif self.request.user.roles == 'Owner':
+            base = base.filter(room__hotel__owner=self.request.user)
+        return base.order_by('-created_at')
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)

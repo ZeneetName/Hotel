@@ -12,6 +12,7 @@ export const btnBookings = document.querySelector(".my-bookings");
 export const btnCreateHotel = document.querySelector(".create-hotel-btn");
 export const modal = document.querySelector(".modal");
 export const siteTitle = document.querySelector(".site-title");
+export const siteFooter = document.querySelector(".site-footer");
 
 export function showSection(section) {
     [authSection, profileSection, bookingsSection, hotelDetailSection].forEach(
@@ -31,7 +32,8 @@ export function showSection(section) {
         section.style.display = "flex";
         header.style.display = "none";
     } else if (section === authSection) {
-        section.style.display = "flex";
+        // Авторизация/регистрация — полноэкранный режим без шапки и футера.
+        section.style.display = "block";
         header.style.display = "none";
     } else if (section === profileSection) {
         section.style.display = "flex";
@@ -40,6 +42,9 @@ export function showSection(section) {
         section.style.display = "block";
         header.style.display = "flex";
     }
+
+    // Футер скрываем только на страницах входа/регистрации.
+    if (siteFooter) siteFooter.style.display = section === authSection ? "none" : "block";
 }
 
 export function hideAllSections() {
@@ -48,4 +53,5 @@ export function hideAllSections() {
     );
     document.querySelector(".hotels-section").style.display = "block";
     header.style.display = "flex";
+    if (siteFooter) siteFooter.style.display = "block";
 }
