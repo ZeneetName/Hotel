@@ -18,6 +18,14 @@ import { renderBookings } from "../pages/bookings/index.js";
 import { renderAuthForm } from "../features/auth/index.js";
 import { showCreateHotelModal } from "../features/hotel-manage/index.js";
 import { initRouter } from "./router.js";
+import {SVG_hotel} from "../shared/ui/svg/hotel.js"
+import Toast from "../shared/ui/toast.js";
+
+const AvatarHotel = document.querySelector(".brand-mark");
+AvatarHotel.innerHTML = SVG_hotel
+
+const AvatarHotelFooter = document.querySelector(".footer-brand-mark");
+AvatarHotelFooter.innerHTML = SVG_hotel
 
 // --- Навигация ---
 siteTitle.style.cursor = "pointer";
@@ -42,6 +50,66 @@ if (homeCtaBtn)
         }
         showCreateHotelModal();
     };
+// --- Поиск гостиниц на главной: по городу и свободным датам ---
+const homeSearchBtn = document.querySelector(".home-search-btn");
+if (homeSearchBtn) {
+    const heroEl = document.querySelector(".home-hero");
+    const cityInput = heroEl.querySelector('.home-search-field input[type="text"]');
+    const [checkInInput, checkOutInput] = heroEl.querySelectorAll(
+        '.home-search-field input[type="date"]',
+    );
+    const sortSelect = document.querySelector(".hotels-sort-select");
+
+    const runHomeSearch = () => {
+        const city = cityInput.value.trim();
+        const check_in = checkInInput.value;
+        const check_out = checkOutInput.value;
+        const ordering = sortSelect ? sortSelect.value : "";
+
+        // Даты ищем только парой: либо обе, либо ни одной.
+        if ((check_in && !check_out) || (!check_in && check_out)) {
+            Toast.warning("Укажите обе даты: заезд и выезд");
+            return;
+        }
+        if (check_in && check_out && new Date(check_out) <= new Date(check_in)) {
+            Toast.warning("Дата выезда должна быть позже даты заезда");
+            return;
+        }
+
+        renderHotels(false, { city, check_in, check_out, ordering, search: true });
+    };
+
+    homeSearchBtn.onclick = runHomeSearch;
+    cityInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runHomeSearch();
+    });
+    // Не даём выбрать выезд раньше заезда.
+    checkInInput.addEventListener("change", () => {
+        if (checkInInput.value) checkOutInput.min = checkInInput.value;
+    });
+    // Смена сортировки сразу перезагружает список с текущими фильтрами.
+    if (sortSelect) sortSelect.addEventListener("change", runHomeSearch);
+}
+
+// --- Навигация в подвале ---
+document.querySelectorAll(".footer-nav").forEach((link) => {
+    link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const target = link.dataset.nav;
+        if (target === "hotels") {
+            renderHotels();
+            return;
+        }
+        // Бронирования и профиль доступны только авторизованным.
+        if (!getUser()) {
+            renderAuthForm();
+            return;
+        }
+        if (target === "bookings") renderBookings();
+        else if (target === "profile") renderProfile();
+    });
+});
+
 modal.onclick = (e) => {
     if (e.target === modal) {
         hideModal();

@@ -19,6 +19,7 @@ class Manager(BaseUserManager):
         kwargs.setdefault('roles', 'Admin')
         kwargs.setdefault('full_name', f"Admin_{uuid.uuid4().hex[:6]}")
         kwargs.setdefault('phone', f"+700000000{uuid.uuid4().hex[:3]}")
+
         if kwargs.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
         if kwargs.get('is_superuser') is not True:
@@ -69,12 +70,12 @@ class HotelImage(models.Model):
     def __str__(self):
         return f'Фото отеля {self.hotel.title}'
 
-TYPE = [
-    ('standard', 'Стандартный'),
-    ('deluxe', 'Люкс')
-]
 
 class Room(models.Model):
+    TYPE = [
+        ('standard', 'Стандартный'),
+        ('deluxe', 'Люкс')
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=128, verbose_name='room_title')
     max_place = models.PositiveSmallIntegerField(verbose_name='Количество мест')

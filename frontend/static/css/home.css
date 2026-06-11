@@ -1,0 +1,885 @@
+/* ========================================
+   HEADER BRAND (GullGo)
+   ======================================== */
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+/* Логотип-иконка внутри фирменных «плашек» масштабируется по размеру плашки */
+.brand-mark svg,
+.footer-brand-mark svg {
+    width: 76%;
+    height: 76%;
+    vertical-align: middle;
+}
+
+.auth-brand-mark svg {
+    width: 58%;
+    height: 58%;
+    vertical-align: middle;
+}
+
+.header .site-title {
+    cursor: pointer;
+}
+
+.login {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+    color: var(--primary-foreground);
+    border-radius: var(--radius);
+    padding: 10px 24px;
+}
+
+.login:hover {
+    opacity: 0.95;
+}
+
+/* ========================================
+   HOME — hero search
+   ======================================== */
+
+.hotels-section {
+    padding: 0;
+}
+
+.home-hero {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-top: -32px;
+    min-height: 440px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    background: #9bcdf0;
+}
+
+/* Чёткое фото неба с облаками на заднем плане. */
+.home-hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.home-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    /* Очень лёгкая дымка по краям — фото остаётся чётким, но облако с поиском
+       по центру мягко выделяется. */
+    background: radial-gradient(70% 70% at 50% 52%, rgba(255, 255, 255, 0.12) 0%, rgba(135, 175, 210, 0.18) 100%);
+    pointer-events: none;
+}
+
+.home-hero-inner {
+    position: relative;
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 60px 72px 64px;
+    z-index: 0;
+}
+
+/* Белое облако под текстом: пухлые лепестки-клубы по всему периметру дают
+   рваный, неровный контур (никаких прямых краёв и углов), а плотные клубы
+   в центре держат фон под блоком поиска. Размытие сглаживает в настоящее
+   облачко, в котором «парит» поиск. */
+.home-hero-inner::before {
+    content: "";
+    position: absolute;
+    inset: -40px -54px;
+    z-index: -1;
+    background:
+        /* верхняя кромка — бугры разной высоты */
+        radial-gradient(26% 36% at 14% 24%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0) 68%),
+        radial-gradient(30% 42% at 34% 14%, rgba(248, 251, 255, 0.97) 0%, rgba(248, 251, 255, 0) 68%),
+        radial-gradient(24% 36% at 52% 20%, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0) 68%),
+        radial-gradient(32% 44% at 72% 14%, rgba(246, 250, 255, 0.97) 0%, rgba(246, 250, 255, 0) 68%),
+        radial-gradient(24% 34% at 90% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 68%),
+        /* боковые бугры */
+        radial-gradient(24% 38% at 6% 48%, rgba(250, 252, 255, 0.96) 0%, rgba(250, 252, 255, 0) 70%),
+        radial-gradient(22% 34% at 96% 52%, rgba(248, 251, 255, 0.95) 0%, rgba(248, 251, 255, 0) 70%),
+        /* нижняя кромка — рваные клубы */
+        radial-gradient(28% 38% at 12% 76%, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0) 70%),
+        radial-gradient(34% 44% at 34% 88%, rgba(247, 250, 255, 0.97) 0%, rgba(247, 250, 255, 0) 70%),
+        radial-gradient(30% 42% at 56% 90%, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0) 70%),
+        radial-gradient(28% 40% at 78% 84%, rgba(248, 251, 255, 0.96) 0%, rgba(248, 251, 255, 0) 70%),
+        radial-gradient(24% 36% at 92% 72%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0) 70%),
+        /* плотное ядро под надписями (eyebrow + заголовок) — верхняя половина */
+        radial-gradient(54% 46% at 40% 34%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 72%),
+        radial-gradient(52% 44% at 60% 32%, rgba(253, 254, 255, 1) 0%, rgba(253, 254, 255, 0) 72%),
+        radial-gradient(50% 40% at 50% 40%, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0) 72%),
+        /* плотное ядро под поиском — нижняя половина */
+        radial-gradient(52% 58% at 38% 54%, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0) 74%),
+        radial-gradient(50% 56% at 62% 56%, rgba(252, 254, 255, 0.99) 0%, rgba(252, 254, 255, 0) 74%),
+        radial-gradient(46% 52% at 50% 64%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0) 74%),
+        /* сплошная подложка по всей центральной зоне, чтобы под текстом
+           облако было гуще и ровнее, без просветов */
+        radial-gradient(64% 70% at 50% 46%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 78%);
+    filter: blur(14px);
+    pointer-events: none;
+}
+
+.home-hero-eyebrow {
+    text-align: center;
+    margin: 0 0 8px;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    /* Более насыщенный золотой + лёгкая тень — чтобы текст читался
+       поверх прозрачной «туманной» подложки. */
+    color: #8a6a2f;
+    text-shadow: 0 1px 6px rgba(255, 255, 255, 0.9);
+}
+
+.home-hero-title {
+    text-align: center;
+    margin: 0 0 32px;
+    font-family: var(--font-serif);
+    font-size: clamp(1.9rem, 4vw, 3rem);
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--foreground);
+}
+
+.home-search {
+    max-width: 880px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    overflow: hidden;
+}
+
+.home-search-field {
+    padding: 16px 18px;
+    border-right: 1px solid var(--border);
+}
+
+.home-search-field label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted-foreground);
+    margin-bottom: 6px;
+}
+
+.home-search-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.home-search-ic {
+    color: var(--accent);
+    font-size: 0.9rem;
+}
+
+.home-search-control input {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--foreground);
+}
+
+.home-search-submit {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+}
+
+.home-search-btn {
+    height: 100%;
+    min-height: 44px;
+    padding: 0 24px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+    color: var(--primary-foreground);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ========================================
+   HOME — features / подборки
+   ======================================== */
+
+.home-features {
+    position: relative;
+    z-index: 1;
+    /* Полноширинная «панель» страницы: растягиваем на всю ширину окна,
+       слегка поднимаем на фото hero, а скруглённые верхние углы открывают
+       кусочек картинки из-под себя по всей ширине. */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-top: -20px;
+    padding: 44px 0 8px;
+    background: var(--background);
+    border-radius: 28px 28px 0 0;
+}
+
+/* Контент панели держим по центру в пределах макета. */
+.home-features-head,
+.home-features-grid {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.home-features-head {
+    margin-bottom: 24px;
+}
+
+.home-features-eyebrow {
+    margin: 0 0 6px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+}
+
+.home-features-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    color: var(--foreground);
+}
+
+.home-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.feature-card {
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.feature-card-ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 14px;
+    border-radius: var(--radius);
+    background: var(--muted);
+    color: var(--accent);
+}
+
+.feature-card-title {
+    margin: 0 0 6px;
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: var(--foreground);
+}
+
+.feature-card-sub {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+}
+
+/* ========================================
+   HOME — listing
+   ======================================== */
+
+.home-listing {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 16px 16px;
+}
+
+.home-listing-head {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.home-listing-head h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    margin: 0;
+}
+
+.home-listing-head .hotels-count {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+}
+
+.hotels-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hotels-sort-label {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+}
+
+.hotels-sort-select {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--foreground);
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.hotels-sort-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.hotels-list {
+    display: grid;
+    /* Авто-подбор колонок: на широком экране ~4 в ряд, на узком — меньше,
+       но сетка не схлопывается неожиданно в один столбец. */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 22px;
+    margin-top: 0;
+}
+
+/* Пустой результат поиска — на всю ширину сетки */
+.hotels-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 56px 24px;
+    background: var(--card);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+}
+
+.hotels-empty h3 {
+    margin: 0 0 8px;
+}
+
+.hotels-empty p {
+    margin: 0;
+    color: var(--muted-foreground);
+}
+
+/* ========================================
+   РЕЖИМ РЕЗУЛЬТАТОВ ПОИСКА
+   При активном поиске «Подборки» скрыты,
+   а список гостиниц выстроен колонкой вниз
+   (по одной карточке в ряд, горизонтальной).
+   ======================================== */
+.hotels-section.search-active .home-features {
+    display: none;
+}
+
+.hotels-section.search-active .hotels-list {
+    grid-template-columns: 1fr;
+}
+
+/* В режиме поиска тело листинга — две колонки: фильтры слева, отели справа. */
+.listing-body {
+    display: block;
+}
+
+.hotels-section.search-active .listing-body {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    align-items: start;
+    gap: 28px;
+}
+
+/* Сайдбар фильтров виден только в режиме поиска. */
+.hotels-filters {
+    display: none;
+}
+
+.hotels-section.search-active .hotels-filters {
+    display: block;
+    position: sticky;
+    top: 88px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 20px 18px;
+}
+
+.filters-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.filters-head h3 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.filters-reset {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.filters-reset:hover {
+    text-decoration: underline;
+}
+
+.filter-group {
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+}
+
+.filter-group-title {
+    margin: 0 0 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-foreground);
+}
+
+.filter-amenity {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--foreground);
+}
+
+.filter-amenity input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.filter-amenity-ic {
+    display: inline-flex;
+    color: var(--accent);
+    font-size: 1rem;
+}
+
+.filter-empty {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+}
+
+.filter-price-val {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--foreground);
+}
+
+.filter-price-range {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+@media (max-width: 860px) {
+    .hotels-section.search-active .listing-body {
+        grid-template-columns: 1fr;
+    }
+    .hotels-section.search-active .hotels-filters {
+        position: static;
+    }
+}
+
+.hotels-section.search-active .hotel-card {
+    flex-direction: row;
+}
+
+.hotels-section.search-active .hotel-card-media {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.hotels-section.search-active .hotel-card .hotel-img {
+    height: 100%;
+    min-height: 210px;
+}
+
+.hotels-section.search-active .hotel-info {
+    flex: 1;
+}
+
+@media (max-width: 640px) {
+    .hotels-section.search-active .hotel-card {
+        flex-direction: column;
+    }
+    .hotels-section.search-active .hotel-card-media {
+        width: 100%;
+    }
+    .hotels-section.search-active .hotel-card .hotel-img {
+        height: 200px;
+        min-height: 0;
+    }
+}
+
+/* Restyled hotel cards */
+.hotel-card-media {
+    position: relative;
+}
+
+.hotel-card-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(28, 43, 58, 0.85);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+.hotel-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.hotel-card-top h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.hotel-card-rating {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.hotel-card-city {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    margin: 0;
+}
+
+.hotel-card-addr {
+    font-size: 0.82rem;
+    color: var(--muted-foreground);
+    margin: 0;
+    opacity: 0.85;
+}
+
+.hotel-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+
+.hotel-card-price b {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.hotel-card-price span {
+    font-size: 0.82rem;
+    color: var(--muted-foreground);
+}
+
+.hotel-card-cta {
+    font-size: 0.82rem;
+    color: var(--accent);
+    font-weight: 500;
+}
+
+/* ========================================
+   HOME — add property CTA
+   ======================================== */
+
+.home-cta {
+    margin-top: 56px;
+    border-radius: var(--radius-lg);
+    padding: 48px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+}
+
+.home-cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.12;
+    background: radial-gradient(circle at 70% 50%, var(--accent) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.home-cta-title {
+    position: relative;
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 8px;
+}
+
+.home-cta-sub {
+    position: relative;
+    max-width: 440px;
+    margin: 0 auto 24px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.home-cta-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: #fff;
+    font-weight: 500;
+    transition: transform 0.2s ease;
+}
+
+.home-cta-btn:hover {
+    transform: scale(1.04);
+}
+
+/* ========================================
+   SITE FOOTER (GullGo)
+   ======================================== */
+
+.site-footer {
+    background: var(--primary);
+    margin-top: 80px;
+}
+
+.site-footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+.site-footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius);
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.footer-brand-name {
+    font-family: var(--font-serif);
+    font-weight: 10000;
+    font-size: 1.15rem;
+    color: #fff;
+}
+
+.footer-about {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+}
+
+.footer-heading {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 0 4px;
+}
+
+.footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+    color: #fff;
+}
+
+.footer-link-static {
+    cursor: default;
+}
+
+.footer-link-sm {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.footer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: rgba(52, 211, 153, 0.12);
+    color: #34d399;
+}
+
+.footer-socials {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.footer-social {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.footer-social:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.site-footer-bottom {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.footer-version {
+    font-family: var(--font-mono);
+}
+
+/* ========================================
+   HOME / FOOTER responsive
+   ======================================== */
+
+@media (max-width: 768px) {
+    .home-search {
+        grid-template-columns: 1fr;
+    }
+
+    .home-search-field {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .site-footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .site-footer-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

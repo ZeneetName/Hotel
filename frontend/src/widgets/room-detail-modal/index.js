@@ -6,6 +6,8 @@ import { amenityChipsHtml } from "../../entities/room/amenities.js";
 import { setupRoomCarousel } from "../room-carousel/index.js";
 import { showEditRoomModal, showDeleteRoomConfirm } from "../../features/room-manage/index.js";
 import { showBookingModalForRoom } from "../../features/booking/index.js";
+import { SVG_edit } from "../../shared/ui/svg/edit.js";
+import { SVG_trash } from "../../shared/ui/svg/trash.js";
 
 export function showRoomDetailModal(room, hotel, isOwner) {
     const user = getUser();
@@ -86,8 +88,8 @@ export function showRoomDetailModal(room, hotel, isOwner) {
             <div class="room-detail-modal-price">${room.price_on_one_day} ₽ за сутки</div>
             <div class="room-detail-modal-actions">
                 ${isOwner ? `
-                    <button class="btn edit-room-detail-btn" style="background: #667eea;">✏️ Редактировать</button>
-                    <button class="btn delete-room-detail-btn" style="background: #dc3545;">🗑️ Удалить</button>
+                    <button class="btn edit-room-detail-btn" style="background: #667eea;">${SVG_edit} Редактировать</button>
+                    <button class="btn delete-room-detail-btn" style="background: #dc3545;">${SVG_trash} Удалить</button>
                 ` : `
                     <button class="btn book-room-detail-btn">Забронировать</button>
                 `}

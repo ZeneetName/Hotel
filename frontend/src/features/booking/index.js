@@ -3,6 +3,7 @@ import { modal } from "../../shared/ui/dom.js";
 import Toast from "../../shared/ui/toast.js";
 import { bookingApi } from "../../entities/booking/api.js";
 import { roomApi } from "../../entities/room/api.js";
+import { SVG_people } from "../../shared/ui/svg/people.js";
 
 const fmtRub = (n) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 const guestWord = (n) => (n === 1 ? "гость" : n >= 2 && n <= 4 ? "гостя" : "гостей");
@@ -31,20 +32,27 @@ export function showBookingModalForRoom(room, hotel) {
             </div>
 
             <div class="bk-box">
-                <div class="bk-box-dates">
-                    <div class="bk-cell">
-                        <label>Заезд</label>
-                        <div class="bk-cell-row"><span class="bk-ic">📅</span><input type="date" class="date-from"></div>
+                <div class="bk-cal" data-cal>
+                    <div class="bk-cal-head">
+                        <button type="button" class="bk-cal-nav bk-cal-prev" aria-label="Предыдущий месяц">‹</button>
+                        <span class="bk-cal-month">—</span>
+                        <button type="button" class="bk-cal-nav bk-cal-next" aria-label="Следующий месяц">›</button>
                     </div>
-                    <div class="bk-cell bk-cell-divider">
-                        <label>Выезд</label>
-                        <div class="bk-cell-row"><span class="bk-ic">📅</span><input type="date" class="date-to"></div>
+                    <div class="bk-cal-week"><span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span></div>
+                    <div class="bk-cal-grid"></div>
+                    <div class="bk-cal-legend">
+                        <span class="bk-cal-lg"><i class="bk-cal-dot bk-cal-dot--free"></i>Свободно</span>
+                        <span class="bk-cal-lg"><i class="bk-cal-dot bk-cal-dot--busy"></i>Занято</span>
+                    </div>
+                    <div class="bk-cal-selected">
+                        <span>Заезд: <b class="bk-cal-in">—</b></span>
+                        <span>Выезд: <b class="bk-cal-out">—</b></span>
                     </div>
                 </div>
                 <div class="bk-cell bk-cell-top">
                     <label>Гости</label>
                     <div class="bk-guests-row">
-                        <div class="bk-cell-row"><span class="bk-ic">👥</span><span class="bk-guests-count">1 ${guestWord(1)}</span></div>
+                        <div class="bk-cell-row"><span class="bk-ic">${SVG_people}</span><span class="bk-guests-count">1 ${guestWord(1)}</span></div>
                         <div class="bk-stepper">
                             <button type="button" class="bk-step bk-minus">−</button>
                             <span class="bk-guests-num">1</span>
@@ -53,6 +61,9 @@ export function showBookingModalForRoom(room, hotel) {
                     </div>
                 </div>
             </div>
+
+            <input type="hidden" class="date-from">
+            <input type="hidden" class="date-to">
 
             <div class="bk-breakdown" style="display:none">
                 <div class="bk-bd-row"><span class="bk-bd-line"></span><span class="bk-bd-sum"></span></div>
@@ -105,8 +116,122 @@ export function showBookingModalForRoom(room, hotel) {
             submit.textContent = "Выберите даты";
         }
     };
-    fromEl.onchange = recalc;
-    toEl.onchange = recalc;
+    // --- Кастомный календарь с подсветкой занятых дат ---
+    const calRoot = modal.querySelector("[data-cal]");
+    const grid = calRoot.querySelector(".bk-cal-grid");
+    const monthLabel = calRoot.querySelector(".bk-cal-month");
+    const inLabel = calRoot.querySelector(".bk-cal-in");
+    const outLabel = calRoot.querySelector(".bk-cal-out");
+
+    const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    // Локальная дата → "YYYY-MM-DD" (без сдвига по часовому поясу).
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const parseISO = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const busy = new Set();              // занятые дни "YYYY-MM-DD"
+    let view = new Date(monthStart);     // отображаемый месяц
+    let selFrom = null;                  // выбранный заезд (Date)
+    let selTo = null;                    // выбранный выезд (Date)
+
+    // Есть ли занятый день в полуинтервале [a, b)
+    const hasBusyBetween = (a, b) => {
+        const c = new Date(a);
+        while (c < b) {
+            if (busy.has(iso(c))) return true;
+            c.setDate(c.getDate() + 1);
+        }
+        return false;
+    };
+
+    const syncSelection = () => {
+        fromEl.value = selFrom ? iso(selFrom) : "";
+        toEl.value = selTo ? iso(selTo) : "";
+        inLabel.textContent = selFrom ? selFrom.toLocaleDateString("ru-RU") : "—";
+        outLabel.textContent = selTo ? selTo.toLocaleDateString("ru-RU") : "—";
+        recalc();
+    };
+
+    const pick = (day) => {
+        if (!selFrom || selTo || day <= selFrom) {
+            // начинаем выбор заново с заезда
+            selFrom = day;
+            selTo = null;
+        } else if (hasBusyBetween(selFrom, day)) {
+            // нельзя перепрыгнуть занятые дни — начинаем заново
+            selFrom = day;
+            selTo = null;
+        } else {
+            selTo = day;
+        }
+        syncSelection();
+        render();
+    };
+
+    function render() {
+        monthLabel.textContent = `${MONTHS[view.getMonth()]} ${view.getFullYear()}`;
+        grid.innerHTML = "";
+        const lead = (new Date(view.getFullYear(), view.getMonth(), 1).getDay() + 6) % 7; // Пн — первый
+        const days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+        for (let i = 0; i < lead; i++) {
+            const sp = document.createElement("span");
+            sp.className = "bk-cal-day bk-cal-day--empty";
+            grid.append(sp);
+        }
+        for (let d = 1; d <= days; d++) {
+            const date = new Date(view.getFullYear(), view.getMonth(), d);
+            const key = iso(date);
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "bk-cal-day";
+            cell.textContent = d;
+            const isPast = date < today;
+            const isBusy = busy.has(key);
+            if (isPast) cell.classList.add("bk-cal-day--past");
+            if (isBusy) cell.classList.add("bk-cal-day--busy");
+            if (selFrom && key === iso(selFrom)) cell.classList.add("bk-cal-day--from");
+            if (selTo && key === iso(selTo)) cell.classList.add("bk-cal-day--to");
+            if (selFrom && selTo && date > selFrom && date < selTo) cell.classList.add("bk-cal-day--inrange");
+            if (isPast || isBusy) {
+                cell.disabled = true;
+            } else {
+                cell.onclick = () => pick(date);
+            }
+            grid.append(cell);
+        }
+    }
+
+    calRoot.querySelector(".bk-cal-prev").onclick = () => {
+        const m = new Date(view.getFullYear(), view.getMonth() - 1, 1);
+        if (m >= monthStart) { view = m; render(); } // не листаем в прошлое
+    };
+    calRoot.querySelector(".bk-cal-next").onclick = () => {
+        view = new Date(view.getFullYear(), view.getMonth() + 1, 1);
+        render();
+    };
+
+    render();
+
+    // Подгружаем занятые периоды и помечаем дни.
+    bookingApi
+        .busyDates(room.id)
+        .then((res) => {
+            const ranges = res.data || res.results || (Array.isArray(res) ? res : []);
+            ranges.forEach((r) => {
+                if (!r.check_in || !r.check_out) return;
+                const end = parseISO(r.check_out); // день выезда свободен
+                const c = parseISO(r.check_in);
+                while (c < end) {
+                    busy.add(iso(c));
+                    c.setDate(c.getDate() + 1);
+                }
+            });
+            render();
+        })
+        .catch(() => {});
 
     submit.onclick = async () => {
         const check_in = fromEl.value;

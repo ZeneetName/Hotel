@@ -3,6 +3,7 @@ import Toast from "../../shared/ui/toast.js";
 import { getUser } from "../../entities/user/session.js";
 import { reviewApi } from "../../entities/review/api.js";
 import { showEditReviewModal } from "../../features/review-manage/index.js";
+import { SVG_star } from "../../shared/ui/svg/star.js";
 
 export async function loadReviews(hotel) {
     const reviewsList = hotelDetailSection.querySelector(".reviews-list");
@@ -27,7 +28,7 @@ export async function loadReviews(hotel) {
                     <div class="comment-header">
                         <div class="comment-user-info">
                             <b class="comment-author">${review.user_name}</b>
-                            <span class="comment-score">⭐ ${review.score}/5</span>
+                            <span class="comment-score">${SVG_star} ${review.score}/5</span>
                         </div>
                         <span class="comment-date">${new Date(review.created_at).toLocaleDateString("ru-RU")}</span>
                     </div>

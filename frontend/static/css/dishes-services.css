@@ -1,0 +1,185 @@
+/* ========================================
+   DISHES
+   ======================================== */
+
+.dishes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.dish-card {
+    background: var(--card);
+    padding: 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.dish-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+}
+
+.dish-card h4 {
+    margin: 0 0 8px 0;
+    font-family: var(--font-serif);
+    font-weight: 500;
+    color: var(--foreground);
+}
+
+.dish-card p {
+    color: var(--muted-foreground);
+    font-size: 0.9rem;
+    margin: 0 0 8px 0;
+}
+
+.dish-card p:last-child {
+    margin: 0;
+}
+
+.dish-card .dish-weight {
+    color: var(--muted-foreground);
+    font-size: 0.85rem;
+}
+
+.dish-card .dish-price {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.1rem;
+    font-family: var(--font-serif);
+}
+
+.dish-card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+}
+
+.dish-composition {
+    color: var(--muted-foreground);
+    font-size: 0.9rem;
+    margin: 0 0 8px 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.dish-weight {
+    color: var(--muted-foreground);
+    font-size: 0.85rem;
+    margin: 0 0 12px 0;
+}
+
+.dish-image-preview {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+}
+
+/* ========================================
+   SERVICES
+   ======================================== */
+
+.services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.service-card {
+    background: var(--card);
+    padding: 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    gap: 16px;
+    position: relative;
+}
+
+.service-card img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.service-card .service-info {
+    flex: 1;
+}
+
+.service-card h4 {
+    margin: 0 0 8px 0;
+    font-family: var(--font-serif);
+    font-weight: 500;
+    color: var(--foreground);
+}
+
+.service-card p {
+    margin: 0 0 12px 0;
+    color: var(--muted-foreground);
+    font-size: 0.9rem;
+}
+
+.service-card p:last-child {
+    margin: 0;
+}
+
+.service-card .service-price {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.1rem;
+    font-family: var(--font-serif);
+}
+
+.service-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.service-placeholder {
+    width: 120px;
+    height: 120px;
+    background: var(--secondary);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.service-duration {
+    color: var(--muted-foreground);
+    font-size: 0.9rem;
+    margin: 0 0 12px 0;
+}
+
+.service-info {
+    flex: 1;
+}
+
+.service-price {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 0;
+    font-family: var(--font-serif);
+}
+
+.service-image-preview {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+}
+

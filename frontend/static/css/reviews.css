@@ -1,0 +1,147 @@
+/* ========================================
+   COMMENTS & REVIEWS
+   ======================================== */
+
+.reviews-list {
+    color: var(--muted-foreground);
+}
+
+.comment-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease;
+}
+
+.comment-card:hover {
+    box-shadow: var(--shadow);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.comment-user-info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.comment-author {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.comment-score {
+    font-size: 0.85rem;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+}
+
+.comment-date {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+}
+
+.comment-text {
+    margin: 8px 0;
+    line-height: 1.6;
+    color: var(--foreground);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.add-comment-form {
+    background: var(--secondary);
+    border-radius: var(--radius);
+    padding: 20px;
+}
+
+.add-comment-form h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: var(--foreground);
+}
+
+.comment-input,
+.edit-comment-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: var(--card);
+    color: var(--foreground);
+    resize: vertical;
+    transition: border-color 0.3s;
+}
+
+.comment-input:focus,
+.edit-comment-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.comment-score-input,
+.edit-comment-score-input {
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.95rem;
+    background: var(--card);
+    color: var(--foreground);
+    cursor: pointer;
+}
+
+.add-comment-btn {
+    width: 100%;
+    margin-top: 12px;
+}
+
+/* ========================================
+   STAR RATING
+   ======================================== */
+
+.star-rating {
+    display: flex;
+    gap: 4px;
+    font-size: 1.8rem;
+    cursor: pointer;
+}
+
+.star-rating .star {
+    color: var(--border-strong);
+    transition: color 0.2s, transform 0.1s;
+    cursor: pointer;
+}
+
+.star-rating .star:hover,
+.star-rating .star.active {
+    color: var(--accent);
+    transform: scale(1.1);
+}
+
+.star-rating .star:hover ~ .star {
+    color: var(--border-strong);
+}
+

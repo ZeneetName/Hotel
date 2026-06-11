@@ -71,10 +71,24 @@ class HotelSerializer(serializers.ModelSerializer):
     owner_full_name = serializers.CharField(source="owner.full_name", read_only=True)
     owner_phone = serializers.CharField(source="owner.phone", read_only=True)
     min_price = serializers.SerializerMethodField()
+    max_price = serializers.SerializerMethodField()
+    amenities = serializers.SerializerMethodField()
 
     def get_min_price(self, obj):
         prices = [room.price_on_one_day for room in obj.hotel_room.all()]
         return min(prices) if prices else 0
+
+    def get_max_price(self, obj):
+        prices = [room.price_on_one_day for room in obj.hotel_room.all()]
+        return max(prices) if prices else 0
+
+    def get_amenities(self, obj):
+        keys = []
+        for room in obj.hotel_room.all():
+            for key in (room.amenities or []):
+                if key not in keys:
+                    keys.append(key)
+        return keys
 
     class Meta:
         model = Hotel
@@ -90,6 +104,8 @@ class HotelSerializer(serializers.ModelSerializer):
             "city",
             "rating",
             "min_price",
+            "max_price",
+            "amenities",
             "created_at",
         ]
 
@@ -137,6 +153,7 @@ class BookingSerializer(serializers.ModelSerializer):
     hotel_name = serializers.CharField(source="room.hotel.title", read_only=True)
     user_name = serializers.CharField(source="user.full_name", read_only=True)
     user_email = serializers.CharField(source="user.email", read_only=True)
+    user_phone = serializers.CharField(source="user.phone", read_only=True)
 
     class Meta:
         model = Booking
@@ -145,6 +162,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "user",
             "user_name",
             "user_email",
+            "user_phone",
             "room",
             "room_title",
             "hotel_name",
@@ -154,7 +172,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "created_at",
             "total_days",
         ]
-        read_only_fields = ["id", "created_at", "total_price", "total_days", "room", "user", "room_title", "hotel_name", "user_name", "user_email"]
+        read_only_fields = ["id", "created_at", "total_price", "total_days", "room", "user", "room_title", "hotel_name", "user_name", "user_email", "user_phone"]
 
     def validate(self, attrs):
         check_in = attrs.get("check_in") or getattr(self.instance, "check_in", None)

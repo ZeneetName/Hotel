@@ -5,6 +5,7 @@ import { roomApi } from "../../entities/room/api.js";
 import { fileFieldHtml } from "../../shared/ui/fileField.js";
 import { amenitiesCheckboxesHtml, getSelectedAmenities } from "../../entities/room/amenities.js";
 import { renderHotelDetail } from "../../pages/hotel-detail/index.js";
+import { SVG_warning } from "../../shared/ui/svg/warning.js";
 
 export function showEditRoomModal(hotel, room) {
     showModal(`
@@ -142,7 +143,7 @@ export function showCreateRoomModal(hotel) {
 export function showDeleteRoomConfirm(hotel, roomId) {
     showModal(`
         <div class="confirm-dialog">
-            <div class="confirm-icon">⚠️</div>
+            <div class="confirm-icon">${SVG_warning}</div>
             <h2>Удаление номера</h2>
             <p class="confirm-message">Вы уверены, что хотите удалить этот номер?</p>
             <p class="confirm-warning">Это действие нельзя отменить.</p>

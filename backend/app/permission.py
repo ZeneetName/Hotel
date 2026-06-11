@@ -48,7 +48,6 @@ class CREATEUPDATEDELETE_FOR_OWNERHOTEL_AND_ADMIN_For_Booking_and_Room(BasePermi
             return True
         if request.user.roles == 'Admin':
             return True
-        # Объект может быть номером (obj.hotel) или бронированием (obj.room.hotel).
         hotel = getattr(obj, 'hotel', None)
         if hotel is None:
             room = getattr(obj, 'room', None)

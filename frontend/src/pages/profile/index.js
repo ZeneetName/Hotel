@@ -4,7 +4,11 @@ import { loaderHtml } from "../../shared/ui/loader.js";
 import { userApi } from "../../entities/user/api.js";
 import { logout } from "../../features/auth/index.js";
 import { renderBookings } from "../bookings/index.js";
+import { renderHotels } from "../hotels/index.js";
 import { getBookingScope } from "../../entities/booking/scope.js";
+import { SVG_mail } from "../../shared/ui/svg/mail.js";
+import { SVG_mobile } from "../../shared/ui/svg/mobile.js";
+import { SVG_warning } from "../../shared/ui/svg/warning.js";
 
 const ROLE_LABELS = {
     Admin: "Администратор",
@@ -35,6 +39,7 @@ export async function renderProfile(skipHistory = false) {
 
         content.innerHTML = `
             <div class="profile-cover">
+                <button class="profile-back-hotels" type="button">← Вернуться к просмотру гостиниц</button>
                 <button class="profile-logout">⎋ Выйти</button>
             </div>
             <div class="profile-card">
@@ -46,14 +51,14 @@ export async function renderProfile(skipHistory = false) {
 
                 <div class="profile-grid">
                     <div class="profile-detail-item">
-                        <span class="profile-detail-icon">📧</span>
+                        <span class="profile-detail-icon">${SVG_mail}</span>
                         <div class="profile-detail-content">
                             <span class="profile-detail-label">Email</span>
                             <span class="profile-detail-value">${user.email || "—"}</span>
                         </div>
                     </div>
                     <div class="profile-detail-item">
-                        <span class="profile-detail-icon">📱</span>
+                        <span class="profile-detail-icon">${SVG_mobile}</span>
                         <div class="profile-detail-content">
                             <span class="profile-detail-label">Телефон</span>
                             <span class="profile-detail-value">${user.phone || "Не указан"}</span>
@@ -63,7 +68,7 @@ export async function renderProfile(skipHistory = false) {
 
                 <div class="profile-actions">
                     <button class="profile-action profile-action--primary profile-to-bookings">
-                        <span class="profile-action-ic">🗓</span>
+                        <span class="profile-action-ic"></span>
                         <span>
                             <b class="profile-bookings-label">Мои бронирования</b>
                             <small class="profile-bookings-hint">Посмотреть историю поездок</small>
@@ -75,10 +80,12 @@ export async function renderProfile(skipHistory = false) {
         `;
 
         content.querySelector(".profile-logout").onclick = logout;
+        content.querySelector(".profile-back-hotels").onclick = () =>
+            renderHotels();
         content.querySelector(".profile-to-bookings").onclick = () =>
             renderBookings();
 
-        // Владельцу гостиниц/админу — «Бронирования гостиниц» вместо «Мои бронирования».
+
         getBookingScope().then((scope) => {
             if (scope.canManage) {
                 const lbl = content.querySelector(".profile-bookings-label");
@@ -94,7 +101,7 @@ export async function renderProfile(skipHistory = false) {
         isLoaded = true;
         content.innerHTML = `
             <div class="profile-card profile-card--error">
-                <div class="bookings-empty-ic">⚠️</div>
+                <div class="bookings-empty-ic">${SVG_warning}</div>
                 <h3>Не удалось загрузить профиль</h3>
                 <p>Попробуйте обновить страницу позже.</p>
                 <button class="btn profile-logout">Выйти</button>

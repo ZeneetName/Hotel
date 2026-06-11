@@ -8,6 +8,14 @@ import { getBookingScope } from "../../entities/booking/scope.js";
 import Toast from "../../shared/ui/toast.js";
 import { renderHotels } from "../hotels/index.js";
 import { renderProfile } from "../profile/index.js";
+import { SVG_building } from "../../shared/ui/svg/building.js";
+import { SVG_user } from "../../shared/ui/svg/user.js";
+import { SVG_edit } from "../../shared/ui/svg/edit.js";
+import { SVG_trash } from "../../shared/ui/svg/trash.js";
+import { SVG_bed } from "../../shared/ui/svg/bed.js";
+import { SVG_warning } from "../../shared/ui/svg/warning.js";
+import { SVG_clipboard } from "../../shared/ui/svg/clipboard.js";
+import { SVG_luggage } from "../../shared/ui/svg/luggage.js";
 
 // Красивое русское написание даты: «12 июня 2026».
 function fmtDate(value) {
@@ -59,26 +67,45 @@ export async function renderBookings(skipHistory = false) {
             : "Бронирования ваших гостиниц"
         : "Все ваши поездки в одном месте";
 
+    // Кнопку «Новое бронирование» не показываем владельцам и админам.
+    const showExplore = !(scope.isAdmin || scope.roles === "Owner");
+    // Поиск по ID — только для администратора.
+    const showSearch = scope.isAdmin;
+
     bookingsSection.innerHTML = `
         <div class="bookings-page">
             <header class="bookings-head">
                 <div>
-                    <button class="bookings-eyebrow bookings-to-profile" type="button">← Личный кабинет</button>
+                    <div class="bookings-nav">
+                        <button class="bookings-eyebrow bookings-to-profile" type="button">← Личный кабинет</button>
+                        <button class="bookings-eyebrow bookings-to-hotels" type="button">${SVG_building} К списку гостиниц</button>
+                    </div>
                     <h1 class="bookings-title">${scope.label}</h1>
                     <p class="bookings-subtitle">${subtitle}</p>
                 </div>
-                <button class="btn bookings-explore">＋ Новое бронирование</button>
+                ${showExplore ? `<button class="btn bookings-explore">＋ Новое бронирование</button>` : ""}
             </header>
+            ${
+                showSearch
+                    ? `<form class="bookings-search" data-search>
+                        <input class="bookings-search-input" type="search" placeholder="Поиск брони по ID" autocomplete="off">
+                        <button class="btn bookings-search-btn" type="submit">Найти</button>
+                        <button class="btn bookings-search-reset" type="button" hidden>Сбросить</button>
+                       </form>`
+                    : ""
+            }
             <div class="bookings-stats" data-stats hidden></div>
             <div class="bookings-list"></div>
             <div class="bookings-sentinel" data-sentinel></div>
         </div>
     `;
 
-    bookingsSection.querySelector(".bookings-explore").onclick = () =>
-        renderHotels();
+    const exploreBtn = bookingsSection.querySelector(".bookings-explore");
+    if (exploreBtn) exploreBtn.onclick = () => renderHotels();
     bookingsSection.querySelector(".bookings-to-profile").onclick = () =>
         renderProfile();
+    bookingsSection.querySelector(".bookings-to-hotels").onclick = () =>
+        renderHotels();
 
     const list = bookingsSection.querySelector(".bookings-list");
     const statsEl = bookingsSection.querySelector("[data-stats]");
@@ -91,6 +118,7 @@ export async function renderBookings(skipHistory = false) {
     let loading = false;
     let firstLoad = true;
     let observer = null;
+    let searchTerm = ""; // активный поиск по ID (для админа)
 
     const stopObserver = () => {
         if (observer) {
@@ -137,14 +165,14 @@ export async function renderBookings(skipHistory = false) {
         el.dataset.id = b.id;
 
         const guestHtml =
-            scope.canManage && (b.user_name || b.user_email)
-                ? `<p class="booking-guest">👤 ${b.user_name || "Гость"}${b.user_email ? ` · ${b.user_email}` : ""}</p>`
+            scope.canManage && (b.user_name || b.user_phone)
+                ? `<p class="booking-guest">${SVG_user} ${b.user_name || "Гость"}${b.user_phone ? ` · ${b.user_phone}` : ""}</p>`
                 : "";
 
         const manageHtml = scope.canManage
             ? `<div class="booking-card-actions">
-                    <button class="booking-act booking-edit" type="button">✎ Изменить</button>
-                    <button class="booking-act booking-del" type="button">🗑 Удалить</button>
+                    <button class="booking-act booking-edit" type="button">${SVG_edit} Изменить</button>
+                    <button class="booking-act booking-del" type="button">${SVG_trash} Удалить</button>
                </div>`
             : "";
 
@@ -154,7 +182,7 @@ export async function renderBookings(skipHistory = false) {
                     <h3 class="booking-hotel">${b.hotel_name || "Гостиница"}</h3>
                     <span class="booking-status booking-status--${st.key}">${st.label}</span>
                 </div>
-                <p class="booking-room">🛏 ${b.room_title || "Номер"}</p>
+                <p class="booking-room">${SVG_bed} ${b.room_title || "Номер"}</p>
                 ${guestHtml}
                 <div class="booking-dates">
                     <div class="booking-date">
@@ -254,7 +282,7 @@ export async function renderBookings(skipHistory = false) {
     function showDeleteBookingConfirm(b, el) {
         showModal(`
             <div class="confirm-dialog">
-                <div class="confirm-icon">⚠️</div>
+                <div class="confirm-icon">${SVG_warning}</div>
                 <h2>Удаление брони</h2>
                 <p class="confirm-message">Удалить бронирование «${b.room_title || "Номер"}» в «${b.hotel_name || "Гостиница"}»?</p>
                 <p class="confirm-warning">Это действие нельзя отменить.</p>
@@ -284,9 +312,18 @@ export async function renderBookings(skipHistory = false) {
 
     function renderEmpty() {
         statsEl.hidden = true;
+        if (searchTerm) {
+            list.innerHTML = `
+                <div class="bookings-empty">
+                    <div class="bookings-empty-ic">${SVG_clipboard}</div>
+                    <h3>Ничего не найдено</h3>
+                    <p>Бронирование с ID «${searchTerm}» не найдено. Проверьте идентификатор.</p>
+                </div>`;
+            return;
+        }
         list.innerHTML = `
             <div class="bookings-empty">
-                <div class="bookings-empty-ic">${scope.canManage ? "📋" : "🧳"}</div>
+                <div class="bookings-empty-ic">${scope.canManage ? SVG_clipboard : SVG_luggage}</div>
                 <h3>Бронирований пока нет</h3>
                 <p>${scope.canManage ? "Как только гости начнут бронировать, заявки появятся здесь." : "Самое время найти идеальный отель для вашего следующего путешествия."}</p>
                 ${scope.canManage ? "" : `<button class="btn bookings-empty-btn">Подобрать отель</button>`}
@@ -305,7 +342,7 @@ export async function renderBookings(skipHistory = false) {
         }
 
         try {
-            const res = await bookingApi.list(nextPage);
+            const res = await bookingApi.list(nextPage, searchTerm);
             const results = res.results || (Array.isArray(res) ? res : []);
             totalCount = res.count != null ? res.count : results.length;
 
@@ -332,7 +369,7 @@ export async function renderBookings(skipHistory = false) {
             if (nextPage == null) stopObserver();
         } catch {
             if (firstLoad) {
-                list.innerHTML = `<div class="bookings-empty"><div class="bookings-empty-ic">⚠️</div><h3>Не удалось загрузить</h3><p>Попробуйте обновить страницу позже.</p></div>`;
+                list.innerHTML = `<div class="bookings-empty"><div class="bookings-empty-ic">${SVG_warning}</div><h3>Не удалось загрузить</h3><p>Попробуйте обновить страницу позже.</p></div>`;
             }
             nextPage = null;
             stopObserver();
@@ -340,6 +377,48 @@ export async function renderBookings(skipHistory = false) {
             loading = false;
             sentinel.innerHTML = "";
         }
+    }
+
+    // Сбрасывает список и запускает загрузку заново (например, после поиска).
+    function reload() {
+        stopObserver();
+        loaded.length = 0;
+        totalCount = 0;
+        nextPage = 1;
+        loading = false;
+        firstLoad = true;
+        list.innerHTML = "";
+        statsEl.hidden = true;
+        observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) loadNext();
+            },
+            { rootMargin: "200px" },
+        );
+        observer.observe(sentinel);
+        loadNext();
+    }
+
+    // Поиск брони по ID (только для админа).
+    const searchForm = bookingsSection.querySelector("[data-search]");
+    if (searchForm) {
+        const input = searchForm.querySelector(".bookings-search-input");
+        const resetBtn = searchForm.querySelector(".bookings-search-reset");
+        searchForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const term = input.value.trim();
+            if (term === searchTerm) return;
+            searchTerm = term;
+            resetBtn.hidden = !term;
+            reload();
+        });
+        resetBtn.onclick = () => {
+            input.value = "";
+            if (!searchTerm) return;
+            searchTerm = "";
+            resetBtn.hidden = true;
+            reload();
+        };
     }
 
     // Бесконечная прокрутка: подгружаем следующую страницу, когда виден sentinel.

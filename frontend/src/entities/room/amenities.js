@@ -1,10 +1,17 @@
+import { SVG_TV } from "../../shared/ui/svg/TV.js";
+import { SVG_eat } from "../../shared/ui/svg/eat.js";
+import { SVG_balcony } from "../../shared/ui/svg/balcony.js";
+import { SVG_parking } from "../../shared/ui/svg/parking.js";
+import { SVG_air_conditioner } from "../../shared/ui/svg/air_conditioner.js";
+import { SVG_wi_fi } from "../../shared/ui/svg/wi-fi.js";
+
 export const ROOM_AMENITIES = [
-    { key: "wifi", label: "Wi-Fi", icon: "📶" },
-    { key: "ac", label: "Кондиционер", icon: "❄️" },
-    { key: "breakfast", label: "Завтрак", icon: "🍳" },
-    { key: "balcony", label: "Балкон", icon: "🌅" },
-    { key: "tv", label: "Телевизор", icon: "📺" },
-    { key: "parking", label: "Парковка", icon: "🅿️" },
+    { key: "wifi", label: "Wi-Fi", icon: SVG_wi_fi },
+    { key: "ac", label: "Кондиционер", icon: SVG_air_conditioner },
+    { key: "breakfast", label: "Завтрак", icon: SVG_eat },
+    { key: "balcony", label: "Балкон", icon: SVG_balcony },
+    { key: "tv", label: "Телевизор", icon: SVG_TV },
+    { key: "parking", label: "Парковка", icon: SVG_parking },
 ];
 
 export function amenityChipsHtml(amenities) {

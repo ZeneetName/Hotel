@@ -1,0 +1,82 @@
+/* ========================================
+   AUTH
+   ======================================== */
+
+.auth-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 80px);
+    padding: 40px 20px;
+}
+
+.auth-form {
+    background: var(--card);
+    max-width: 420px;
+    width: 100%;
+    padding: 50px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    animation: slideUp 0.5s ease-out;
+}
+
+.auth-form h2 {
+    margin: 0 0 20px 0;
+    text-align: center;
+    color: var(--foreground);
+    font-size: 1.9rem;
+    font-weight: 600;
+}
+
+.auth-form input {
+    padding: 14px 16px;
+    font-size: 1rem;
+    font-family: var(--font-sans);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    background: var(--secondary);
+    color: var(--foreground);
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--card);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.auth-form input::placeholder {
+    color: var(--muted-foreground);
+}
+
+.auth-form .btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.auth-form p {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--muted-foreground);
+    margin-top: 8px;
+}
+
+.auth-form a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.auth-form a:hover {
+    text-decoration: underline;
+}
+

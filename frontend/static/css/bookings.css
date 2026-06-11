@@ -1,0 +1,439 @@
+/* ========================================
+   BOOKINGS
+   ======================================== */
+
+.bookings-section {
+    min-height: 400px;
+}
+
+.bookings-page {
+    max-width: 920px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+}
+
+.bookings-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.bookings-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 6px;
+}
+
+.bookings-eyebrow {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.bookings-to-hotels {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: opacity 0.2s ease, gap 0.2s ease;
+}
+
+.bookings-to-hotels:hover {
+    opacity: 0.7;
+    gap: 8px;
+}
+
+.bookings-to-profile {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: opacity 0.2s ease, gap 0.2s ease;
+}
+
+.bookings-to-profile:hover {
+    opacity: 0.7;
+    gap: 8px;
+}
+
+.bookings-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 2.1rem;
+    color: var(--foreground);
+}
+
+.bookings-subtitle {
+    margin: 6px 0 0;
+    color: var(--muted-foreground);
+}
+
+.bookings-explore {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Поиск брони по ID (админ) */
+.bookings-search {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.bookings-search-input {
+    flex: 1;
+    min-width: 220px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--foreground);
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 11px 14px;
+}
+
+.bookings-search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.bookings-search-btn,
+.bookings-search-reset {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.bookings-search-reset {
+    background: var(--secondary);
+    color: var(--foreground);
+}
+
+.bookings-loading {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--muted-foreground);
+}
+
+/* Summary stats */
+.bookings-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.bookings-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bookings-stat-val {
+    font-family: var(--font-serif);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+.bookings-stat-label {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+}
+
+/* List */
+.bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.booking-card {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    transition: all 0.25s ease;
+}
+
+.booking-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.booking-card--past {
+    border-left-color: var(--muted-foreground);
+    opacity: 0.85;
+}
+
+.booking-card--active {
+    border-left-color: #22c55e;
+}
+
+.booking-card-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.booking-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.booking-hotel {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--foreground);
+}
+
+.booking-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.booking-status--upcoming {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.booking-status--active {
+    background: rgba(34, 197, 94, 0.14);
+    color: #15803d;
+}
+
+.booking-status--past {
+    background: var(--muted);
+    color: var(--muted-foreground);
+}
+
+.booking-room {
+    margin: 0 0 14px;
+    color: var(--muted-foreground);
+    font-size: 0.95rem;
+}
+
+.booking-dates {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.booking-date {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.booking-date-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted-foreground);
+}
+
+.booking-date-val {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.booking-date-arrow {
+    color: var(--accent);
+    font-size: 1.2rem;
+}
+
+.booking-nights {
+    margin-left: 4px;
+    background: var(--secondary);
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+}
+
+.booking-card-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    padding-left: 20px;
+    border-left: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.booking-price-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted-foreground);
+}
+
+.booking-price {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+/* Гость брони (виден владельцу/админу) */
+.booking-guest {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    color: var(--foreground);
+    font-weight: 600;
+}
+
+/* ID бронирования на карточке */
+.booking-id {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: var(--secondary);
+    color: var(--muted-foreground);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.02em;
+    word-break: break-all;
+    user-select: all;
+}
+
+/* Кнопки управления бронью (владелец/админ) */
+.booking-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+    width: 100%;
+}
+
+.booking-act {
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    color: var(--foreground);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.booking-act:hover {
+    background: var(--secondary);
+    transform: translateY(-1px);
+}
+
+.booking-del:hover {
+    background: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+/* Sentinel + подгрузка при бесконечной прокрутке */
+.bookings-sentinel {
+    min-height: 1px;
+}
+
+.bookings-loading--more {
+    display: flex;
+    justify-content: center;
+    padding: 24px 0;
+}
+
+/* Модалка редактирования брони */
+.bk-edit h2 {
+    margin: 0 0 4px;
+}
+
+.bk-edit-sub {
+    margin: 0 0 18px;
+    color: var(--muted-foreground);
+    font-size: 0.95rem;
+}
+
+.bk-edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.bk-edit-field input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm, 10px);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+}
+
+.bk-edit-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+/* Empty / error state */
+.bookings-empty {
+    text-align: center;
+    padding: 64px 24px;
+    background: var(--card);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+}
+
+.bookings-empty-ic {
+    font-size: 52px;
+    margin-bottom: 12px;
+}
+
+.bookings-empty h3 {
+    margin: 0 0 8px;
+    color: var(--foreground);
+}
+
+.bookings-empty p {
+    margin: 0 auto 20px;
+    max-width: 360px;
+    color: var(--muted-foreground);
+}
+

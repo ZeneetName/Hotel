@@ -6,6 +6,8 @@ import { hotelApi } from "../../entities/hotel/api.js";
 import { fileFieldHtml } from "../../shared/ui/fileField.js";
 import { renderHotels } from "../../pages/hotels/index.js";
 import { renderHotelDetail } from "../../pages/hotel-detail/index.js";
+import { SVG_upload } from "../../shared/ui/svg/upload.js";
+import { SVG_warning } from "../../shared/ui/svg/warning.js";
 
 export function showCreateHotelModal() {
     showModal(`
@@ -89,7 +91,7 @@ export function showEditHotelPage(hotel) {
                 <div class="form-group form-group--full">
                     <label>Новые фото <span class="form-hint">несколько, необязательно</span></label>
                     <label class="file-drop">
-                        <span class="file-drop-ic">⬆</span>
+                        <span class="file-drop-ic">${SVG_upload}</span>
                         <span class="file-drop-text">Нажмите, чтобы выбрать фотографии</span>
                         <input type="file" class="hotel-image-input" multiple accept="image/*">
                     </label>
@@ -152,7 +154,7 @@ export function showEditHotelPage(hotel) {
 export function showDeleteHotelConfirm(hotel) {
     showModal(`
         <div class="confirm-dialog">
-            <div class="confirm-icon">⚠️</div>
+            <div class="confirm-icon">${SVG_warning}</div>
             <h2>Удаление гостиницы</h2>
             <p class="confirm-message">Вы уверены, что хотите удалить гостиницу "${hotel.title}"?</p>
             <p class="confirm-warning">Это действие нельзя отменить. Все номера и бронирования будут удалены.</p>

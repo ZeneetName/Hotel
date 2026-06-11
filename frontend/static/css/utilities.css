@@ -1,0 +1,23 @@
+/* ========================================
+   UTILITIES
+   ======================================== */
+
+.text-muted {
+    color: var(--muted-foreground);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+}
+
+
+.error-message {
+    color: var(--destructive);
+}
+
+.detail-actions {
+    display: flex;
+    gap: 12px;
+    margin: 24px 0;
+}
+

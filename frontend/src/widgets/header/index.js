@@ -10,12 +10,11 @@ export function setHeaderAuth(isAuth) {
         isAuth && user && (user.roles === "Admin" || user.roles === "Owner");
     btnCreateHotel.style.display = canCreate ? "block" : "none";
 
-    // Владельцу гостиниц/админу показываем «Бронирования гостиниц» вместо «Мои бронирования».
     if (isAuth) {
         getBookingScope().then((scope) => {
-            btnBookings.textContent = `🗓️ ${scope.label}`;
+            btnBookings.textContent = `${scope.label}`;
         });
     } else {
-        btnBookings.textContent = "🗓️ Мои бронирования";
+        btnBookings.textContent = "Мои бронирования";
     }
 }

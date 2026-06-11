@@ -1,9 +1,3 @@
-/**
- * Toast Notification System
- * Позволяет показывать уведомления в правом нижнем углу
- * Типы: success (зеленый), error (красный), info (синий), warning (желтый)
- */
-
 class NotificationManager {
     constructor() {
         this.container = null;
@@ -13,7 +7,6 @@ class NotificationManager {
     }
 
     init() {
-        // Создаем контейнер для уведомлений если его нет
         if (!document.querySelector(".notifications-container")) {
             this.container = document.createElement("div");
             this.container.className = "notifications-container";

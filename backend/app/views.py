@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, date
 
-from django.db.models import ExpressionWrapper, F, Avg, DecimalField
+from django.db.models import ExpressionWrapper, F, Avg, DecimalField, CharField, Value
+from django.db.models.functions import Cast, Lower, Replace
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -135,6 +136,14 @@ class HotelViewSets(viewsets.ModelViewSet):
 
         if check_in and check_out:
             queryset = hotels_with_available_rooms(queryset, check_in, check_out)
+
+        # Сортировка: по дате добавления и по рейтингу.
+        ordering = request.query_params.get("ordering", "").strip()
+        allowed_ordering = {
+            "created_at", "-created_at", "rating", "-rating",
+        }
+        if ordering in allowed_ordering:
+            queryset = queryset.order_by(ordering, "-created_at")
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -368,10 +377,19 @@ class RoomViewSets(viewsets.ModelViewSet):
             return [CREATE_LIST_ROOM_For_Booking()]
         return [CREATEUPDATEDELETE_FOR_OWNERHOTEL_AND_ADMIN_For_Booking_and_Room()]
 
-    @action(methods=['POST'], detail=True)
+    @action(methods=['POST', 'GET'], detail=True)
     def booking(self, request, pk=None):
         try:
             room = self.get_object()
+
+            if request.method == 'GET':
+                bookings = (
+                    Booking.objects
+                    .filter(room=room, check_out__gte=date.today())
+                    .values('check_in', 'check_out')
+                )
+                return Response({'data': list(bookings)})
+
             serializer = BookingSerializer(
                 data=request.data,
                 context={"room": room, "request": request},
@@ -407,6 +425,18 @@ class BookingViewSets(viewsets.ModelViewSet):
             base = base.filter(user=self.request.user)
         elif self.request.user.roles == 'Owner':
             base = base.filter(room__hotel__owner=self.request.user)
+
+        # Поиск брони по ID (полному или частичному). Сравниваем по тексту
+        # UUID без дефисов, чтобы работало и в SQLite, и в PostgreSQL.
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            needle = search.replace('-', '').lower()
+            base = base.annotate(
+                id_text=Lower(
+                    Replace(Cast('id', CharField(max_length=36)), Value('-'), Value(''))
+                )
+            ).filter(id_text__icontains=needle)
+
         return base.order_by('-created_at')
 
     def perform_create(self, serializer):

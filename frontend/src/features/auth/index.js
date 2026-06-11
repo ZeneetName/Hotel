@@ -5,6 +5,13 @@ import { userApi } from "../../entities/user/api.js";
 import { setCurrentUser, clearSession } from "../../entities/user/session.js";
 import { setHeaderAuth } from "../../widgets/header/index.js";
 import { renderHotels } from "../../pages/hotels/index.js";
+import { SVG_building } from "../../shared/ui/svg/building.js";
+import { SVG_mail } from "../../shared/ui/svg/mail.js";
+import { SVG_lock } from "../../shared/ui/svg/password.js";
+import { SVG_user } from "../../shared/ui/svg/user.js";
+import { SVG_phone } from "../../shared/ui/svg/phone.js";
+import { SVG_eye } from "../../shared/ui/svg/eye.js";
+import { SVG_eye_off } from "../../shared/ui/svg/eye-off.js";
 
 // Левая декоративная панель (общая для входа и регистрации).
 function asidePanel(title, text, extraHtml = "") {
@@ -12,8 +19,8 @@ function asidePanel(title, text, extraHtml = "") {
         <div class="auth-aside">
             <div class="auth-aside-top">
                 <span class="auth-brand">
-                    <span class="auth-brand-mark">🏨</span>
-                    <span class="auth-brand-name">StayLux</span>
+                    <span class="auth-brand-mark">${SVG_building}</span>
+                    <span class="auth-brand-name">GullGo</span>
                 </span>
             </div>
             <div class="auth-aside-mid">
@@ -21,7 +28,7 @@ function asidePanel(title, text, extraHtml = "") {
                 <p class="auth-aside-text">${text}</p>
                 ${extraHtml}
             </div>
-            <p class="auth-aside-copy">© 2026 StayLux</p>
+            <p class="auth-aside-copy">© 2026 GullGo</p>
         </div>
     `;
 }
@@ -33,7 +40,7 @@ function wireEyes(root) {
             const input = eye.parentElement.querySelector("input");
             const show = input.type === "password";
             input.type = show ? "text" : "password";
-            eye.textContent = show ? "🙈" : "👁";
+            eye.innerHTML = show ? SVG_eye_off : SVG_eye;
         };
     });
 }
@@ -64,16 +71,16 @@ export function renderAuthForm(skipHistory = false) {
                         <div class="auth-field">
                             <label>Email</label>
                             <div class="auth-input">
-                                <span class="auth-ic">✉</span>
+                                <span class="auth-ic">${SVG_mail}</span>
                                 <input type="email" class="auth-email" placeholder="your@email.ru">
                             </div>
                         </div>
                         <div class="auth-field">
                             <label>Пароль</label>
                             <div class="auth-input">
-                                <span class="auth-ic">🔒</span>
+                                <span class="auth-ic">${SVG_lock}</span>
                                 <input type="password" class="auth-password" placeholder="••••••••">
-                                <button type="button" class="auth-eye">👁</button>
+                                <button type="button" class="auth-eye">${SVG_eye}</button>
                             </div>
                         </div>
                         <button class="btn auth-submit auth-login">Войти</button>
@@ -122,7 +129,7 @@ export function renderRegisterForm(skipHistory = false) {
     authSection.innerHTML = `
         <div class="auth-page">
             ${asidePanel(
-                "Присоединяйтесь<br>к StayLux",
+                "Присоединяйтесь<br>к GullGo",
                 "Создайте аккаунт, чтобы бронировать лучшие отели без наценок и управлять всем в одном месте.",
                 `<div class="auth-benefits">
                     <div class="auth-benefit"><span>✓</span> Бронируйте лучшие отели без наценок</div>
@@ -142,7 +149,7 @@ export function renderRegisterForm(skipHistory = false) {
                             <div class="auth-field">
                                 <label>Имя</label>
                                 <div class="auth-input">
-                                    <span class="auth-ic">👤</span>
+                                    <span class="auth-ic">${SVG_user}</span>
                                     <input type="text" class="reg-firstname" placeholder="Иван">
                                 </div>
                             </div>
@@ -156,14 +163,14 @@ export function renderRegisterForm(skipHistory = false) {
                         <div class="auth-field">
                             <label>Email</label>
                             <div class="auth-input">
-                                <span class="auth-ic">✉</span>
+                                <span class="auth-ic">${SVG_mail}</span>
                                 <input type="email" class="reg-email" placeholder="your@email.ru">
                             </div>
                         </div>
                         <div class="auth-field">
                             <label>Телефон</label>
                             <div class="auth-input">
-                                <span class="auth-ic">📞</span>
+                                <span class="auth-ic">${SVG_phone}</span>
                                 <input type="tel" class="reg-phone" placeholder="+79000000000">
                             </div>
                         </div>
@@ -183,9 +190,9 @@ export function renderRegisterForm(skipHistory = false) {
                         <div class="auth-field">
                             <label>Пароль</label>
                             <div class="auth-input">
-                                <span class="auth-ic">🔒</span>
+                                <span class="auth-ic">${SVG_lock}</span>
                                 <input type="password" class="reg-password" placeholder="••••••••">
-                                <button type="button" class="auth-eye">👁</button>
+                                <button type="button" class="auth-eye">${SVG_eye}</button>
                             </div>
                             <div class="auth-strength" style="display:none">
                                 <div class="auth-strength-bars">
@@ -197,7 +204,7 @@ export function renderRegisterForm(skipHistory = false) {
                         <div class="auth-field">
                             <label>Подтвердите пароль</label>
                             <div class="auth-input">
-                                <span class="auth-ic">🔒</span>
+                                <span class="auth-ic">${SVG_lock}</span>
                                 <input type="password" class="reg-confirm" placeholder="••••••••">
                             </div>
                         </div>

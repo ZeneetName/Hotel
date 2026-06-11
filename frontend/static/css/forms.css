@@ -1,0 +1,309 @@
+/* ========================================
+   FILE FIELD (скрепка) — для модальных окон
+   ======================================== */
+.file-field-group {
+    display: block;
+    margin: 4px 0;
+}
+
+.file-field-caption {
+    display: block;
+    font-weight: 600;
+    font-size: 0.92rem;
+    margin-bottom: 7px;
+    color: var(--foreground);
+}
+
+.file-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--secondary);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all 0.22s ease;
+}
+
+.file-field:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.file-field-clip {
+    font-size: 1.15rem;
+    line-height: 1;
+    transform: rotate(-20deg);
+}
+
+.file-field-text {
+    font-size: 0.92rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-field input[type="file"] {
+    display: none;
+}
+
+.file-field--filled {
+    border-style: solid;
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+/* ========================================
+   EDIT HOTEL PAGE
+   ======================================== */
+
+.edit-hotel-page {
+    /* Break out of the 1200px <main> container so the form can be ~2x wider */
+    width: min(2400px, 94vw);
+    max-width: none;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    padding-bottom: 40px;
+}
+
+/* --- Header / cover --- */
+.edit-hotel-head {
+    position: relative;
+    padding: 30px 40px 64px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background:
+        radial-gradient(120% 140% at 88% -30%, rgba(184, 149, 90, 0.45) 0%, transparent 55%),
+        linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+    color: #fff;
+    overflow: hidden;
+}
+
+.edit-hotel-back {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(6px);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.edit-hotel-back:hover {
+    background: rgba(255, 255, 255, 0.24);
+    transform: translateX(-2px);
+}
+
+.edit-hotel-eyebrow {
+    display: block;
+    margin-top: 22px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+}
+
+.edit-hotel-title {
+    margin: 6px 0 0;
+    font-family: var(--font-serif);
+    font-size: 2.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.edit-hotel-sub {
+    margin: 8px 0 0;
+    font-size: 0.96rem;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* --- Form card (overlaps header) --- */
+.edit-hotel-form {
+    position: relative;
+    margin-top: -40px;
+    background: var(--card);
+    padding: 40px 48px 44px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 32px;
+}
+
+.edit-hotel-form .form-group {
+    margin-bottom: 0;
+}
+
+.edit-hotel-form .form-group--full {
+    grid-column: 1 / -1;
+}
+
+.edit-hotel-form .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: 9px;
+    color: var(--foreground);
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.edit-hotel-form .form-hint {
+    font-weight: 500;
+    font-size: 0.76rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--muted-foreground);
+}
+
+.edit-hotel-form input[type="text"],
+.edit-hotel-form textarea {
+    width: 100%;
+    padding: 13px 15px;
+    font-size: 1rem;
+    font-family: var(--font-sans);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--secondary);
+    color: var(--foreground);
+    transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+}
+
+.edit-hotel-form textarea {
+    resize: vertical;
+    min-height: 130px;
+    line-height: 1.6;
+}
+
+.edit-hotel-form input[type="text"]:focus,
+.edit-hotel-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--card);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.edit-hotel-form .current-image-preview {
+    width: 100%;
+    height: 230px;
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+/* --- Upload drop zone --- */
+.edit-hotel-form .file-drop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 26px;
+    text-align: center;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--secondary);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.edit-hotel-form .file-drop:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.edit-hotel-form .file-drop-ic {
+    font-size: 1.5rem;
+}
+
+.edit-hotel-form .file-drop-text {
+    font-size: 0.92rem;
+    font-weight: 500;
+}
+
+.edit-hotel-form .file-drop input[type="file"] {
+    display: none;
+}
+
+/* --- Actions --- */
+.edit-hotel-form .form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    padding-top: 26px;
+    border-top: 1px solid var(--border);
+}
+
+.edit-hotel-form .save-hotel-btn,
+.edit-hotel-form .cancel-edit-btn {
+    padding: 13px 26px;
+    border-radius: var(--radius);
+    font-family: var(--font-sans);
+    font-size: 0.96rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.edit-hotel-form .save-hotel-btn {
+    flex: 2;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: var(--accent-foreground);
+    border: none;
+    box-shadow: 0 6px 18px rgba(184, 149, 90, 0.3);
+}
+
+.edit-hotel-form .save-hotel-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(184, 149, 90, 0.4);
+}
+
+.edit-hotel-form .cancel-edit-btn {
+    flex: 1;
+    background: transparent;
+    color: var(--muted-foreground);
+    border: 1px solid var(--border-strong);
+}
+
+.edit-hotel-form .cancel-edit-btn:hover {
+    background: var(--secondary);
+    color: var(--foreground);
+}
+
+@media (max-width: 720px) {
+    .edit-hotel-head {
+        padding: 24px 24px 60px;
+    }
+    .edit-hotel-title {
+        font-size: 1.7rem;
+    }
+    .edit-hotel-form {
+        grid-template-columns: 1fr;
+        padding: 28px 22px 30px;
+    }
+    .edit-hotel-form .form-actions {
+        flex-direction: column;
+    }
+}
+

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>StayLux — бронирование отелей</title>
+        <title>GullGo — бронирование отелей</title>
         <link rel="stylesheet" href="static/css.css" />
         <script type="module" src="src/app/index.js"></script>
     </head>
@@ -11,16 +11,18 @@
         <header class="header">
             <div class="header-left">
                 <span class="brand">
-                    <span class="brand-mark">🏨</span>
-                    <span class="site-title">StayLux</span>
+                    <span class="brand-mark">
+
+                    </span>
+                    <span class="site-title">GullGo</span>
                 </span>
             </div>
             <div class="header-right">
                 <button class="my-bookings" style="display: none">
-                    🗓️ Мои бронирования
+                    Мои бронирования
                 </button>
                 <button class="profile" style="display: none">
-                    👤 Профиль
+                    Профиль
                 </button>
                 <button class="login">Войти</button>
             </div>
@@ -30,6 +32,11 @@
             <section class="hotels-section">
                 <!-- Hero search -->
                 <div class="home-hero">
+                    <img
+                        class="home-hero-img"
+                        src="static/img/nature.jpg"
+                        alt="Зелёная природа — озеро среди леса и гор"
+                    />
                     <div class="home-hero-inner">
                         <p class="home-hero-eyebrow">Бронирование без комиссий</p>
                         <h1 class="home-hero-title">Найдите идеальный отель</h1>
@@ -37,37 +44,91 @@
                             <div class="home-search-field">
                                 <label>Город</label>
                                 <div class="home-search-control">
-                                    <span class="home-search-ic">📍</span>
                                     <input type="text" placeholder="Все города" />
                                 </div>
                             </div>
                             <div class="home-search-field">
                                 <label>Заезд</label>
                                 <div class="home-search-control">
-                                    <span class="home-search-ic">📅</span>
                                     <input type="date" />
                                 </div>
                             </div>
                             <div class="home-search-field">
                                 <label>Выезд</label>
                                 <div class="home-search-control">
-                                    <span class="home-search-ic">📅</span>
                                     <input type="date" />
                                 </div>
                             </div>
                             <div class="home-search-submit">
-                                <button class="home-search-btn">🔍 Найти</button>
+                                <button class="home-search-btn">Найти</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Подборки / категории -->
+                <div class="home-features">
+                    <div class="home-features-head">
+                        <p class="home-features-eyebrow">Подборки</p>
+                        <h2 class="home-features-title">Куда хочется вернуться</h2>
+                    </div>
+                    <div class="home-features-grid">
+                        <div class="feature-card">
+                            <span class="feature-card-ic">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                                    <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                                    <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                                </svg>
+                            </span>
+                            <p class="feature-card-title">Вблизи к морю</p>
+                            <p class="feature-card-sub">Шум прибоя за окном и пляж в пешей доступности</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-card-ic">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m8 3 4 8 5-5 5 15H2L8 3z"/>
+                                </svg>
+                            </span>
+                            <p class="feature-card-title">Горы и природа</p>
+                            <p class="feature-card-sub">Тишина, свежий воздух и захватывающие виды</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-card-ic">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10 2v2"/>
+                                    <path d="M14 2v2"/>
+                                    <path d="M6 2v2"/>
+                                    <path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/>
+                                </svg>
+                            </span>
+                            <p class="feature-card-title">Завтрак включён</p>
+                            <p class="feature-card-sub">Начните утро вкусно, не выходя из отеля</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="home-listing">
                     <div class="home-listing-head">
-                        <h2>Все отели</h2>
-                        <p class="text-muted hotels-count"></p>
+                        <div>
+                            <h2>Все отели</h2>
+                            <p class="text-muted hotels-count"></p>
+                        </div>
+                        <label class="hotels-sort">
+                            <span class="hotels-sort-label">Сортировка</span>
+                            <select class="hotels-sort-select">
+                                <option value="">По умолчанию</option>
+                                <option value="-created_at">Сначала новые</option>
+                                <option value="created_at">Сначала старые</option>
+                                <option value="-rating">Рейтинг: по убыванию</option>
+                                <option value="rating">Рейтинг: по возрастанию</option>
+                            </select>
+                        </label>
                     </div>
-                    <div class="hotels-list"></div>
+                    <div class="listing-body">
+                        <aside class="hotels-filters"></aside>
+                        <div class="hotels-list"></div>
+                    </div>
 
                     <div class="home-cta">
                         <p class="home-cta-title">Есть своя гостиница?</p>
@@ -98,28 +159,27 @@
                 <div class="site-footer-grid">
                     <div class="footer-col">
                         <div class="footer-brand">
-                            <span class="footer-brand-mark">🏨</span>
-                            <span class="footer-brand-name">StayLux</span>
+                            <span class="footer-brand-mark"></span>
+                            <span class="footer-brand-name">GullGo</span>
                         </div>
                         <p class="footer-about">
-                            Лучшие отели России для незабываемого отдыха.
+                            Лучшие отели для незабываемого отдыха.
                             Бронируйте напрямую, без комиссий.
                         </p>
                     </div>
 
                     <div class="footer-col">
                         <p class="footer-heading">Служба поддержки</p>
-                        <a class="footer-link" href="tel:88001234567">📞 8 800 123-45-67</a>
-                        <a class="footer-link" href="mailto:support@staylux.ru">✉ support@staylux.ru</a>
-                        <span class="footer-link footer-link-static">📍 Москва, Тверская, 1</span>
+                        <a class="footer-link" href="tel:89528895501">📞 +7 952 889 55 01</a>
+                        <a class="footer-link" href="mailto:support@GullGo.ru">✉ support@GullGo.ru</a>
                         <span class="footer-badge">● Работаем 24/7</span>
                     </div>
 
                     <div class="footer-col">
                         <p class="footer-heading">Навигация</p>
-                        <a class="footer-link" href="#hotels">Найти отель</a>
-                        <a class="footer-link" href="#bookings">Мои бронирования</a>
-                        <a class="footer-link" href="#profile">Профиль</a>
+                        <a class="footer-link footer-nav" href="#hotels" data-nav="hotels">Найти отель</a>
+                        <a class="footer-link footer-nav" href="#bookings" data-nav="bookings">Мои бронирования</a>
+                        <a class="footer-link footer-nav" href="#profile" data-nav="profile">Профиль</a>
                     </div>
 
                     <div class="footer-col">
@@ -133,8 +193,8 @@
                     </div>
                 </div>
                 <div class="site-footer-bottom">
-                    <span>© 2026 StayLux. Все права защищены.</span>
-                    <span class="footer-version">v2.1.0</span>
+                    <span>© 2026 GullGo. Все права защищены.</span>
+                    <span class="footer-version">v1.0.0</span>
                 </div>
             </div>
         </footer>

@@ -19,6 +19,14 @@ import { showCreateServiceModal, showEditServiceModal } from "../../features/ser
 import { showRoomDetailModal } from "../../widgets/room-detail-modal/index.js";
 import { setupRoomCarousel } from "../../widgets/room-carousel/index.js";
 import { loadReviews } from "../../widgets/reviews/index.js";
+import {SVG_city} from "../../shared/ui/svg/city.js";
+import { SVG_edit } from "../../shared/ui/svg/edit.js";
+import { SVG_trash } from "../../shared/ui/svg/trash.js";
+import { SVG_calendary } from "../../shared/ui/svg/calendary.js";
+import { SVG_trophy } from "../../shared/ui/svg/trophy.js";
+import { SVG_guard } from "../../shared/ui/svg/guard.js";
+import { SVG_phone } from "../../shared/ui/svg/phone.js";
+import { SVG_people } from "../../shared/ui/svg/people.js";
 
 const noImg = (url) =>
     url ? url.replace("http://localhost", "") : "";
@@ -49,13 +57,13 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                 <div class="hd-nav-left">
                     <button class="hd-back back-btn">‹ Назад к поиску</button>
                     <span class="hd-nav-sep"></span>
-                    <span class="hd-logo">StayLux</span>
+                    <span class="hd-logo">GullGo</span>
                 </div>
                 <div class="hd-nav-right">
                     ${isOwner
-            ? `<button class="hd-nav-btn edit-hotel-btn">✎ Редактировать</button>
+            ? `<button class="hd-nav-btn edit-hotel-btn">${SVG_edit} Редактировать</button>
                            ${btnDeleteHtml.replace('class="button"', 'class="button delete-hotel-btn"')}`
-            : `<button class="hd-nav-btn hd-nav-ghost hd-bookings-btn">🗓 Мои бронирования</button>
+            : `<button class="hd-nav-btn hd-nav-ghost hd-bookings-btn">${SVG_calendary} Мои бронирования</button>
                            <button class="hd-nav-btn hd-nav-ghost">↗ Поделиться</button>`}
                 </div>
             </div>
@@ -65,11 +73,11 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
             <header class="hd-head">
                 <div class="hd-eyebrow">
                     <span class="hd-badge">${ratingNum > 0 ? `★ ${ratingText} из 5` : "Нет оценок"}</span>
-                    <span class="hd-editor">🏆 Выбор редакции 2026</span>
+                    <span class="hd-editor">${SVG_trophy} Популярный</span>
                 </div>
                 <h1 class="hd-title">${hotel.title}</h1>
                 <div class="hd-meta">
-                    <span class="hd-loc">📍 ${[hotel.address, hotel.city].filter(Boolean).join(", ") || "Адрес не указан"}</span>
+                    <span class="hd-loc">${SVG_city} ${[hotel.address, hotel.city].filter(Boolean).join(", ") || "Адрес не указан"}</span>
                     <span class="hd-rate">
                         <span class="hd-stars">★★★★★</span>
                         <b>${ratingText}</b>
@@ -109,9 +117,10 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                         <div class="hd-block">
                             <h2>Расположение</h2>
                             <div class="hd-map">
-                                <span class="hd-map-pin">📍</span>
-                                <p>${hotel.address || "Адрес не указан"}</p>
-                                <p class="text-muted">${hotel.city || ""}</p>
+                                <div class="hotel-address-container">
+                                    <span class="hd-map-pin"></span><p>${hotel.address || "Адрес не указан"}</p>
+                                </div>
+                                <p class="text-muted">${SVG_city} ${hotel.city || ""}</p>
                             </div>
                         </div>
                     </section>
@@ -163,7 +172,7 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                             <div class="owner-card-headinfo">
                                 <p class="owner-card-name">${ownerName}</p>
                                 <p class="owner-card-role">Управляющий отелем</p>
-                                <p class="owner-card-verified">🛡 Верифицированный владелец</p>
+                                <p class="owner-card-verified">${SVG_guard} Верифицированный владелец</p>
                             </div>
                         </div>
                         <div class="owner-card-body">
@@ -172,22 +181,15 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                                 <div class="owner-stat"><b data-reviews-num>0</b><span>отзывов</span></div>
                                 <div class="owner-stat"><b data-rooms-num>—</b><span>номеров</span></div>
                             </div>
-                            <div class="owner-card-badges">
-                                <div class="owner-badge">🏆 <span>Суперхозяин 2024–2026</span></div>
-                                <div class="owner-badge">⏱ <span>Отвечает в течение часа</span></div>
-                                <div class="owner-badge">⭐ <span>Более 95% положительных отзывов</span></div>
-                            </div>
                             <p class="owner-card-bio">Рады приветствовать вас в «${hotel.title}». Мы делаем всё, чтобы ваш отдых был незабываемым — от бронирования до последнего дня пребывания.</p>
                             <div class="owner-card-divider"></div>
                             <div class="owner-card-actions">
-                                ${hotel.owner_email
-            ? `<a class="owner-act owner-act-primary" href="mailto:${hotel.owner_email}">✉ Написать владельцу</a>`
-            : `<span class="owner-act owner-act-primary owner-act-disabled">✉ Написать владельцу</span>`}
+
                                 ${hotel.owner_phone
-            ? `<a class="owner-act owner-act-ghost" href="tel:${hotel.owner_phone}">📞 ${hotel.owner_phone}</a>`
+            ? `<a class="owner-act owner-act-ghost" href="tel:${hotel.owner_phone}">${SVG_phone} ${hotel.owner_phone}</a>`
             : ""}
                             </div>
-                            <p class="owner-card-note">Бесплатная отмена до 48 часов до заезда</p>
+                            <p class="owner-card-note">Бесплатная отмена до 72 часов до заезда</p>
                         </div>
                     </div>
                 </aside>
@@ -265,8 +267,8 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                                         <p class="dish-price">${dish.price} ₽</p>
                                         ${isOwner
                                             ? `<div class="dish-card-actions">
-                                                   <button class="btn-small edit-dish-btn" data-dish-id="${dish.id}">✏️</button>
-                                                   <button class="btn-small delete-dish-btn" data-dish-id="${dish.id}">🗑️</button>
+                                                   <button class="btn-small edit-dish-btn" data-dish-id="${dish.id}">${SVG_edit}</button>
+                                                   <button class="btn-small delete-dish-btn" data-dish-id="${dish.id}">${SVG_trash}</button>
                                                </div>`
                                             : ""}
                                     </div>`,
@@ -294,8 +296,8 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                                         </div>
                                         ${isOwner
                                             ? `<div class="service-card-actions">
-                                                   <button class="btn-small edit-service-btn" data-service-id="${service.id}">✏️</button>
-                                                   <button class="btn-small delete-service-btn" data-service-id="${service.id}">🗑️</button>
+                                                   <button class="btn-small edit-service-btn" data-service-id="${service.id}">${SVG_edit}</button>
+                                                   <button class="btn-small delete-service-btn" data-service-id="${service.id}">${SVG_trash}</button>
                                                </div>`
                                             : ""}
                                     </div>`,
@@ -463,7 +465,7 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                                 <h3 class="hd-room-name">${typeLabel}</h3>
                                 <div class="hd-room-specs">
                                     <span>⤢ ${r.square || "—"} м²</span>
-                                    <span>👥 до ${r.max_place || "—"} гостей</span>
+                                    <span>${SVG_people} до ${r.max_place || "—"} гостей</span>
                                 </div>
                                 ${amenityChipsHtml(r.amenities)}
                             </div>
@@ -471,8 +473,8 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                                 <div class="hd-room-price"><b>${r.price_on_one_day} ₽</b><span> / ночь</span></div>
                                 ${isOwner
                             ? `<div class="hd-room-actions">
-                                       <button class="btn-small edit-room-btn" data-room-id="${r.id}">✎ Изменить</button>
-                                       <button class="btn-small delete-room-btn" data-room-id="${r.id}">🗑 Удалить</button>
+                                       <button class="btn-small edit-room-btn" data-room-id="${r.id}">${SVG_edit} Изменить</button>
+                                       <button class="btn-small delete-room-btn" data-room-id="${r.id}">${SVG_trash} Удалить</button>
                                    </div>`
                             : `<button class="book-btn-small" data-room-id="${r.id}">Выбрать</button>`}
                             </div>

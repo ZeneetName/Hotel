@@ -1,0 +1,127 @@
+/* ========================================
+   NOTIFICATIONS
+   ======================================== */
+
+.notifications-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10000;
+    pointer-events: none;
+    max-width: 450px;
+}
+
+.notification {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transform: translateX(500px);
+    transition: transform 0.3s ease;
+    pointer-events: auto;
+    border-left: 4px solid var(--border);
+    animation: slideIn 0.3s ease forwards;
+    min-width: 200px;
+}
+
+.notification.notification-show {
+    transform: translateX(0);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.notification-icon {
+    font-size: 1rem;
+    font-weight: bold;
+    min-width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.notification-message {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    word-break: break-word;
+    flex: 1;
+    color: var(--foreground);
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--muted-foreground);
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+
+.notification-close:hover {
+    color: var(--foreground);
+}
+
+.notification-success {
+    border-left-color: #22c55e;
+    background: linear-gradient(to right, rgba(34, 197, 94, 0.06), var(--card));
+}
+
+.notification-success .notification-icon {
+    color: #22c55e;
+}
+
+.notification-error {
+    border-left-color: var(--destructive);
+    background: linear-gradient(to right, rgba(192, 57, 43, 0.06), var(--card));
+}
+
+.notification-error .notification-icon {
+    color: var(--destructive);
+}
+
+.notification-info {
+    border-left-color: var(--accent);
+    background: linear-gradient(to right, var(--accent-soft), var(--card));
+}
+
+.notification-info .notification-icon {
+    color: var(--accent);
+}
+
+.notification-warning {
+    border-left-color: #d99a2b;
+    background: linear-gradient(to right, rgba(217, 154, 43, 0.08), var(--card));
+}
+
+.notification-warning .notification-icon {
+    color: #d99a2b;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(500px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+

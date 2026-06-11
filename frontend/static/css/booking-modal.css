@@ -1,0 +1,400 @@
+/* ========================================
+   BOOKING MODAL (GullGo)
+   ======================================== */
+
+.bk-head {
+    margin-bottom: 18px;
+    padding-right: 36px;
+}
+
+.bk-title {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--foreground);
+    margin: 0;
+}
+
+.bk-sub {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    margin: 4px 0 0;
+}
+
+.bk-preview {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+}
+
+.bk-preview-img {
+    width: 84px;
+    height: 64px;
+    flex-shrink: 0;
+    border-radius: var(--radius);
+    background-size: cover;
+    background-position: center;
+    background-color: var(--secondary);
+}
+
+.bk-preview-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 2px;
+}
+
+.bk-preview-meta {
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    margin: 0 0 4px;
+}
+
+.bk-preview-price {
+    font-size: 0.92rem;
+    color: var(--accent);
+    margin: 0;
+}
+
+.bk-preview-price span {
+    font-size: 0.78rem;
+    color: var(--muted-foreground);
+}
+
+/* Dates + guests box */
+.bk-box {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.bk-box-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Календарь бронирования */
+.bk-cal {
+    padding: 14px;
+}
+
+.bk-cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.bk-cal-month {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.bk-cal-nav {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--foreground);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.bk-cal-nav:hover {
+    background: var(--secondary);
+    border-color: var(--accent);
+}
+
+.bk-cal-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 6px;
+}
+
+.bk-cal-week span {
+    text-align: center;
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted-foreground);
+}
+
+.bk-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.bk-cal-day {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    color: var(--foreground); /* свободные числа — «чёрные» */
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.bk-cal-day--empty {
+    cursor: default;
+}
+
+.bk-cal-day:not(:disabled):hover {
+    background: var(--secondary);
+}
+
+.bk-cal-day--past {
+    color: var(--muted-foreground);
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.bk-cal-day--busy {
+    color: var(--destructive); /* занятые числа — красные */
+    background: rgba(192, 57, 43, 0.1);
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.bk-cal-day--inrange {
+    background: rgba(184, 149, 90, 0.18);
+    border-radius: 4px;
+}
+
+.bk-cal-day--from,
+.bk-cal-day--to {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.bk-cal-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 0.74rem;
+    color: var(--muted-foreground);
+}
+
+.bk-cal-lg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bk-cal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.bk-cal-dot--free {
+    background: var(--foreground);
+}
+
+.bk-cal-dot--busy {
+    background: var(--destructive);
+}
+
+.bk-cal-selected {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+}
+
+.bk-cal-selected b {
+    color: var(--foreground);
+    font-weight: 600;
+}
+
+.bk-cell {
+    padding: 12px 14px;
+}
+
+.bk-cell-divider {
+    border-left: 1px solid var(--border);
+}
+
+.bk-cell-top {
+    border-top: 1px solid var(--border);
+}
+
+.bk-cell label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+    margin-bottom: 6px;
+}
+
+.bk-cell-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bk-ic {
+    color: var(--accent);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.bk-cell-row input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--foreground);
+    width: 100%;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+}
+
+.bk-guests-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.bk-guests-count {
+    font-size: 0.88rem;
+    color: var(--foreground);
+}
+
+.bk-stepper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bk-step {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted-foreground);
+    font-size: 0.95rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bk-step:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.bk-guests-num {
+    width: 18px;
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--foreground);
+}
+
+/* Price breakdown */
+.bk-breakdown {
+    flex-direction: column;
+    gap: 8px;
+    background: var(--secondary);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+}
+
+.bk-bd-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+}
+
+.bk-bd-total {
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.bk-submit {
+    width: 100%;
+    padding: 14px;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.bk-submit:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.bk-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    margin: 12px 0 0;
+}
+
+/* Success state */
+.bk-success {
+    text-align: center;
+    padding: 16px 8px 8px;
+}
+
+.bk-success-ic {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bk-success .bk-title {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+}
+
+.bk-success-dates {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    margin: 8px 0 20px;
+}
+
+.bk-success-close {
+    min-width: 160px;
+}

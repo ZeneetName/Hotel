@@ -1,0 +1,442 @@
+/* ========================================
+   BTN DELETE
+   ======================================== */
+.button {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background-color: var(--primary);
+    border: none;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition-duration: 0.3s;
+    overflow: hidden;
+    position: relative;
+    gap: 2px;
+}
+
+.svgIcon {
+    width: 12px;
+    transition-duration: 0.3s;
+}
+
+.svgIcon path {
+    fill: var(--primary-foreground);
+}
+
+.button:hover {
+    transition-duration: 0.3s;
+    background-color: var(--destructive);
+    align-items: center;
+    gap: 0;
+}
+
+.bin-top {
+    transform-origin: bottom right;
+}
+
+.button:hover .bin-top {
+    transition-duration: 0.5s;
+    transform: rotate(160deg);
+}
+
+/* ========================================
+   LOADER
+   ======================================== */
+.loader {
+    --dur: 2s;
+    display: block;
+    margin: auto;
+    width: 14em;
+    height: auto;
+}
+
+.loader__glare-top,
+.loader__glare-bottom,
+.loader__model,
+.loader__motion-thick,
+.loader__motion-medium,
+.loader__motion-thin,
+.loader__sand-drop,
+.loader__sand-fill,
+.loader__sand-grain-left,
+.loader__sand-grain-right,
+.loader__sand-line-left,
+.loader__sand-line-right,
+.loader__sand-mound-top,
+.loader__sand-mound-bottom {
+    animation-duration: var(--dur);
+    animation-timing-function: cubic-bezier(0.83, 0, 0.17, 1);
+    animation-iteration-count: infinite;
+}
+
+.loader__glare-top {
+    animation-name: glare-top;
+}
+
+.loader__glare-bottom {
+    animation-name: glare-bottom;
+}
+
+.loader__model {
+    animation-name: loader-flip;
+    transform-origin: 12.25px 16.75px;
+}
+
+.loader__motion-thick,
+.loader__motion-medium,
+.loader__motion-thin {
+    transform-origin: 26px 26px;
+}
+
+.loader__motion-thick {
+    animation-name: motion-thick;
+}
+
+.loader__motion-medium {
+    animation-name: motion-medium;
+}
+
+.loader__motion-thin {
+    animation-name: motion-thin;
+}
+
+.loader__sand-drop {
+    animation-name: sand-drop;
+}
+
+.loader__sand-fill {
+    animation-name: sand-fill;
+}
+
+.loader__sand-grain-left {
+    animation-name: sand-grain-left;
+}
+
+.loader__sand-grain-right {
+    animation-name: sand-grain-right;
+}
+
+.loader__sand-line-left {
+    animation-name: sand-line-left;
+}
+
+.loader__sand-line-right {
+    animation-name: sand-line-right;
+}
+
+.loader__sand-mound-top {
+    animation-name: sand-mound-top;
+}
+
+.loader__sand-mound-bottom {
+    animation-name: sand-mound-bottom;
+    transform-origin: 12.25px 31.5px;
+}
+
+@keyframes loader-flip {
+    from {
+        transform: translate(13.75px, 9.25px) rotate(-180deg);
+    }
+    24%,
+    to {
+        transform: translate(13.75px, 9.25px) rotate(0);
+    }
+}
+
+@keyframes glare-top {
+    from {
+        stroke: rgba(255, 255, 255, 0);
+    }
+    24%,
+    to {
+        stroke: white;
+    }
+}
+
+@keyframes glare-bottom {
+    from {
+        stroke: white;
+    }
+    24%,
+    to {
+        stroke: rgba(255, 255, 255, 0);
+    }
+}
+
+@keyframes motion-thick {
+    from {
+        animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0);
+        stroke: rgba(255, 255, 255, 0);
+        stroke-dashoffset: 153.94;
+        transform: rotate(0.67turn);
+    }
+    20% {
+        animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1);
+        stroke: rgb(32, 32, 32);
+        stroke-dashoffset: 141.11;
+        transform: rotate(1turn);
+    }
+    40%,
+    to {
+        stroke: rgba(255, 255, 255, 0);
+        stroke-dashoffset: 153.94;
+        transform: rotate(1.33turn);
+    }
+}
+
+@keyframes motion-medium {
+    from,
+    8% {
+        animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0);
+        stroke: rgba(255, 255, 255, 0);
+        stroke-dashoffset: 153.94;
+        transform: rotate(0.5turn);
+    }
+    20% {
+        animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1);
+        stroke: white;
+        stroke-dashoffset: 147.53;
+        transform: rotate(0.83turn);
+    }
+    32%,
+    to {
+        stroke: rgba(255, 255, 255, 0);
+        stroke-dashoffset: 153.94;
+        transform: rotate(1.17turn);
+    }
+}
+
+@keyframes motion-thin {
+    from,
+    4% {
+        animation-timing-function: cubic-bezier(0.33, 0, 0.67, 0);
+        stroke: rgba(255, 255, 255, 0);
+        stroke-dashoffset: 153.94;
+        transform: rotate(0.33turn);
+    }
+    24% {
+        animation-timing-function: cubic-bezier(0.33, 1, 0.67, 1);
+        stroke: rgb(53, 53, 53);
+        stroke-dashoffset: 134.7;
+        transform: rotate(0.67turn);
+    }
+    44%,
+    to {
+        stroke: rgba(255, 255, 255, 0);
+        stroke-dashoffset: 153.94;
+        transform: rotate(1turn);
+    }
+}
+
+@keyframes sand-drop {
+    from,
+    10% {
+        animation-timing-function: cubic-bezier(0.12, 0, 0.39, 0);
+        stroke-dashoffset: 1;
+    }
+    70%,
+    to {
+        stroke-dashoffset: -107;
+    }
+}
+
+@keyframes sand-fill {
+    from,
+    10% {
+        animation-timing-function: cubic-bezier(0.12, 0, 0.39, 0);
+        stroke-dashoffset: 55;
+    }
+    70%,
+    to {
+        stroke-dashoffset: -54;
+    }
+}
+
+@keyframes sand-grain-left {
+    from,
+    10% {
+        animation-timing-function: cubic-bezier(0.12, 0, 0.39, 0);
+        stroke-dashoffset: 29;
+    }
+    70%,
+    to {
+        stroke-dashoffset: -22;
+    }
+}
+
+@keyframes sand-grain-right {
+    from,
+    10% {
+        animation-timing-function: cubic-bezier(0.12, 0, 0.39, 0);
+        stroke-dashoffset: 27;
+    }
+    70%,
+    to {
+        stroke-dashoffset: -24;
+    }
+}
+
+@keyframes sand-line-left {
+    from,
+    10% {
+        animation-timing-function: cubic-bezier(0.12, 0, 0.39, 0);
+        stroke-dashoffset: 53;
+    }
+    70%,
+    to {
+        stroke-dashoffset: -55;
+    }
+}
+
+@keyframes sand-line-right {
+    from,
+    10% {
+        animation-timing-function: cubic-bezier(0.12, 0, 0.39, 0);
+        stroke-dashoffset: 14;
+    }
+    70%,
+    to {
+        stroke-dashoffset: -24.5;
+    }
+}
+
+@keyframes sand-mound-top {
+    from,
+    10% {
+        animation-timing-function: linear;
+        transform: translate(0, 0);
+    }
+    15% {
+        animation-timing-function: cubic-bezier(0.12, 0, 0.39, 0);
+        transform: translate(0, 1.5px);
+    }
+    51%,
+    to {
+        transform: translate(0, 13px);
+    }
+}
+
+@keyframes sand-mound-bottom {
+    from,
+    31% {
+        animation-timing-function: cubic-bezier(0.61, 1, 0.88, 1);
+        transform: scale(1, 0);
+    }
+    56%,
+    to {
+        transform: scale(1, 1);
+    }
+}
+
+/* ========================================
+   ANIMATED HEADER BUTTONS (base)
+   ======================================== */
+
+button {
+    position: relative;
+    padding: 11px 26px;
+    background: var(--primary);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--primary-foreground);
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    transition: all 0.25s ease;
+}
+
+.fil0 {
+    fill: rgba(250, 248, 245, 0.85);
+}
+
+.icon-1 {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 25px;
+    transform-origin: 0 0;
+    transform: rotate(10deg);
+    transition: all 0.5s ease-in-out;
+    filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+button:hover .icon-1 {
+    animation: slay-1 3s cubic-bezier(0.52, 0, 0.58, 1) infinite;
+    transform: rotate(10deg);
+}
+
+@keyframes slay-1 {
+    0% {
+        transform: rotate(10deg);
+    }
+    50% {
+        transform: rotate(-5deg);
+    }
+    100% {
+        transform: rotate(10deg);
+    }
+}
+
+.icon-2 {
+    position: absolute;
+    top: 0;
+    left: 25px;
+    width: 12px;
+    transform-origin: 50% 0;
+    transform: rotate(10deg);
+    transition: all 1s ease-in-out;
+    filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));
+}
+
+button:hover .icon-2 {
+    animation: slay-2 3s cubic-bezier(0.52, 0, 0.58, 1) 1s infinite;
+    transform: rotate(0);
+}
+
+@keyframes slay-2 {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(15deg);
+    }
+    100% {
+        transform: rotate(0);
+    }
+}
+
+.icon-3 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 18px;
+    transform-origin: 50% 0;
+    transform: rotate(-5deg);
+    transition: all 1s ease-in-out;
+    filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));
+}
+
+button:hover .icon-3 {
+    animation: slay-3 2s cubic-bezier(0.52, 0, 0.58, 1) 1s infinite;
+    transform: rotate(0);
+}
+
+@keyframes slay-3 {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(-5deg);
+    }
+    100% {
+        transform: rotate(0);
+    }
+}
+

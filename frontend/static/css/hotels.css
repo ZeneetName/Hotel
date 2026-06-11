@@ -1,0 +1,70 @@
+/* ========================================
+   HOTELS LIST
+   ======================================== */
+
+.hotel-address-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.hotel-address-container p {
+  margin: 0;
+}
+.hotels-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.hotel-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.hotel-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.hotel-img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--secondary);
+}
+
+.hotel-info {
+    padding: 16px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hotel-info h2 {
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.hotel-info p {
+    color: var(--muted-foreground);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.hotel-info .btn {
+    margin-top: auto;
+    align-self: stretch;
+    text-align: center;
+}
+
