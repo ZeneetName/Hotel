@@ -8,6 +8,7 @@ import { showEditRoomModal, showDeleteRoomConfirm } from "../../features/room-ma
 import { showBookingModalForRoom } from "../../features/booking/index.js";
 import { SVG_edit } from "../../shared/ui/svg/edit.js";
 import { SVG_trash } from "../../shared/ui/svg/trash.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 export function showRoomDetailModal(room, hotel, isOwner) {
     const user = getUser();
@@ -54,7 +55,7 @@ export function showRoomDetailModal(room, hotel, isOwner) {
     showModal(`
         <div class="room-detail-modal">
             ${carouselHtml}
-            <h2 style="text-align: center; margin-bottom: 16px;">${room.title || (room.type === "standard" ? "Стандартный номер" : "Люкс номер")}</h2>
+            <h2 style="text-align: center; margin-bottom: 16px;">${escapeHtml(room.title) || (room.type === "standard" ? "Стандартный номер" : "Люкс номер")}</h2>
             <div class="room-detail-modal-info">
                 <h3>Информация о номере</h3>
                 <div class="room-detail-modal-info-grid">
@@ -78,7 +79,7 @@ export function showRoomDetailModal(room, hotel, isOwner) {
             </div>
             <div class="room-detail-modal-description">
                 <h3>Описание</h3>
-                <p>${room.description || "Описание отсутствует"}</p>
+                <p>${escapeHtml(room.description) || "Описание отсутствует"}</p>
             </div>
             ${
                 Array.isArray(room.amenities) && room.amenities.length

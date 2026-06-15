@@ -4,6 +4,7 @@ import Toast from "../../shared/ui/toast.js";
 import { bookingApi } from "../../entities/booking/api.js";
 import { roomApi } from "../../entities/room/api.js";
 import { SVG_people } from "../../shared/ui/svg/people.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 const fmtRub = (n) => `${Math.round(n).toLocaleString("ru-RU")} ₽`;
 const guestWord = (n) => (n === 1 ? "гость" : n >= 2 && n <= 4 ? "гостя" : "гостей");
@@ -19,7 +20,7 @@ export function showBookingModalForRoom(room, hotel) {
         <div class="bk">
             <div class="bk-head">
                 <h2 class="bk-title">Бронирование</h2>
-                <p class="bk-sub">${roomLabel} · ${hotel.title}</p>
+                <p class="bk-sub">${escapeHtml(roomLabel)} · ${escapeHtml(hotel.title)}</p>
             </div>
 
             <div class="bk-preview">
@@ -264,7 +265,7 @@ export function showBookingModalForRoom(room, hotel) {
 
 export async function showBookingModal(hotel) {
     showModal(
-        `<h2>Бронирование: ${hotel.title}</h2><div class="rooms-list"></div>`,
+        `<h2>Бронирование: ${escapeHtml(hotel.title)}</h2><div class="rooms-list"></div>`,
     );
     let rooms = [];
     try {
@@ -283,7 +284,7 @@ export async function showBookingModal(hotel) {
     const roomOptions = rooms
         .map(
             (r) =>
-                `<option value="${r.id}">${r.type} — ${r.price_on_one_day} руб/день</option>`,
+                `<option value="${r.id}">${escapeHtml(r.type)} — ${r.price_on_one_day} руб/день</option>`,
         )
         .join("");
     modal.querySelector(".rooms-list").innerHTML = `

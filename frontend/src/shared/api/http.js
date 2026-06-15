@@ -1,3 +1,5 @@
+import { getCookie } from "../lib/cookie.js";
+
 const BASE_URL = "/api/";
 
 /**
@@ -7,7 +9,7 @@ const BASE_URL = "/api/";
  */
 class Http {
     static getAuthHeaders() {
-        const token = localStorage.getItem("token");
+        const token = getCookie("token") || localStorage.getItem("token");
         return token ? { Authorization: `Token ${token}` } : {};
     }
 

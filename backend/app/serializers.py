@@ -1,9 +1,38 @@
 import json
 import re
 
+from django.utils.html import strip_tags
 from rest_framework import serializers
 from .models import Dish, Service, CustomAuthenticationUser, Hotel, Room, Review, Booking
 from .utils import room_is_available
+
+
+# Поля, значение которых нельзя «чистить» (пароль должен сохраняться как есть).
+_SANITIZE_SKIP = {"password"}
+
+
+class HtmlSanitizedSerializerMixin:
+    """Защита от хранимого XSS на уровне API.
+
+    Удаляет HTML-теги из всех строковых полей на входе, поэтому даже если
+    пользователь пришлёт ``<script>...</script>`` или другую разметку — в БД
+    попадёт уже безопасный текст. Работает для любого канала записи через
+    сериализатор (API, формы), дополняя экранирование на фронтенде.
+    """
+
+    def to_internal_value(self, data):
+        validated = super().to_internal_value(data)
+        for key, value in list(validated.items()):
+            if key in _SANITIZE_SKIP:
+                continue
+            if isinstance(value, str):
+                validated[key] = strip_tags(value).strip()
+            elif isinstance(value, list):
+                validated[key] = [
+                    strip_tags(item).strip() if isinstance(item, str) else item
+                    for item in value
+                ]
+        return validated
 
 
 class AmenitiesField(serializers.JSONField):
@@ -16,10 +45,10 @@ class AmenitiesField(serializers.JSONField):
                 raise serializers.ValidationError("Некорректный формат удобств")
         if not isinstance(data, list):
             raise serializers.ValidationError("Удобства должны быть списком")
-        return [str(item) for item in data]
+        return [strip_tags(str(item)).strip() for item in data]
 
 
-class RegistrationSerializer(serializers.ModelSerializer):
+class RegistrationSerializer(HtmlSanitizedSerializerMixin, serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True, write_only=True)
     phone = serializers.CharField(required=True)
@@ -34,7 +63,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "email",
-            "full_name",
+             "full_name",
             "phone",
             "password",
             "roles"
@@ -67,7 +96,7 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True)
 
-class HotelSerializer(serializers.ModelSerializer):
+class HotelSerializer(HtmlSanitizedSerializerMixin, serializers.ModelSerializer):
     owner_full_name = serializers.CharField(source="owner.full_name", read_only=True)
     owner_phone = serializers.CharField(source="owner.phone", read_only=True)
     min_price = serializers.SerializerMethodField()
@@ -116,7 +145,7 @@ class HotelSerializer(serializers.ModelSerializer):
 
         read_only_fields = ["id", "created_at", "rating", "owner", "owner_full_name", "owner_phone"]
 
-class RoomSerializer(serializers.ModelSerializer):
+class RoomSerializer(HtmlSanitizedSerializerMixin, serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
     amenities = AmenitiesField(required=False)
 
@@ -191,7 +220,7 @@ class BookingSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ReviewSerializer(serializers.ModelSerializer):
+class ReviewSerializer(HtmlSanitizedSerializerMixin, serializers.ModelSerializer):
     user_name = serializers.CharField(source="user.full_name", read_only=True)
     user_id = serializers.CharField(source="user.id", read_only=True)
 
@@ -221,7 +250,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 
-class DishSerializer(serializers.ModelSerializer):
+class DishSerializer(HtmlSanitizedSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Dish
         fields = [
@@ -236,7 +265,7 @@ class DishSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "hotel"]
 
 
-class ServiceSerializer(serializers.ModelSerializer):
+class ServiceSerializer(HtmlSanitizedSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = [

@@ -274,8 +274,15 @@
 
 .home-features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
+}
+
+/* На узких экранах раскладываем карточки в одну колонку. */
+@media (max-width: 720px) {
+    .home-features-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .feature-card {
@@ -349,31 +356,186 @@
     font-size: 0.9rem;
 }
 
+/* Сортировка — единый «таблеточный» контрол: подпись и выпадающий список
+   в одной обёртке с рамкой, как цельный элемент управления. */
 .hotels-sort {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 2px;
+    padding: 4px 6px 4px 16px;
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    box-shadow: 0 1px 2px rgba(28, 43, 58, 0.05);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hotels-sort:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(184, 149, 90, 0.18);
 }
 
 .hotels-sort-label {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: var(--muted-foreground);
+    white-space: nowrap;
 }
 
 .hotels-sort-select {
     font-family: var(--font-sans);
     font-size: 0.9rem;
+    font-weight: 500;
     color: var(--foreground);
-    background: var(--card);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    padding: 8px 12px;
+    /* Своя стрелка (SVG), нативную убираем — иначе на разных ОС разный вид. */
+    background-color: transparent;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b8955a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 34px 8px 12px;
     cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.hotels-sort-select:hover {
+    background-color: var(--muted);
 }
 
 .hotels-sort-select:focus {
     outline: none;
-    border-color: var(--accent);
+}
+
+.hotels-sort-select option {
+    color: var(--foreground);
+    background: var(--card);
+    font-weight: 500;
+}
+
+/* ---- Кастомный декорированный дропдаун сортировки ---- */
+.sort-dd {
+    position: relative;
+}
+
+.sort-dd-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--foreground);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.sort-dd-trigger:hover {
+    background: var(--muted);
+}
+
+.sort-dd-chev {
+    display: inline-flex;
+    color: var(--accent);
+    transition: transform 0.2s ease;
+}
+
+.sort-dd.open .sort-dd-chev {
+    transform: rotate(180deg);
+}
+
+.sort-dd-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 60;
+    min-width: 248px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 20px 44px rgba(28, 43, 58, 0.18);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+    transform-origin: top right;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.sort-dd.open .sort-dd-menu {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.sort-dd-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 11px;
+    font-size: 0.9rem;
+    color: var(--foreground);
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.sort-dd-option + .sort-dd-option {
+    margin-top: 2px;
+}
+
+.sort-dd-ic {
+    display: inline-flex;
+    color: var(--muted-foreground);
+    flex-shrink: 0;
+    transition: color 0.12s ease;
+}
+
+.sort-dd-text {
+    flex: 1;
+}
+
+.sort-dd-check {
+    display: inline-flex;
+    margin-left: auto;
+    color: var(--accent);
+    opacity: 0;
+    transform: scale(0.7);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.sort-dd-option:hover {
+    background: var(--muted);
+}
+
+.sort-dd-option:hover .sort-dd-ic {
+    color: var(--accent);
+}
+
+.sort-dd-option.selected {
+    background: rgba(184, 149, 90, 0.1);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.sort-dd-option.selected .sort-dd-ic {
+    color: var(--accent);
+}
+
+.sort-dd-option.selected .sort-dd-check {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .hotels-list {
@@ -659,6 +821,9 @@
    ======================================== */
 
 .home-cta {
+    /* По умолчанию блок скрыт: его видят только владельцы/админы
+       (body.can-post-housing). Для роли «клиент» блока нет совсем. */
+    display: none;
     margin-top: 56px;
     border-radius: var(--radius-lg);
     padding: 48px 24px;
@@ -666,6 +831,10 @@
     position: relative;
     overflow: hidden;
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+}
+
+body.can-post-housing .home-cta {
+    display: block;
 }
 
 .home-cta::before {

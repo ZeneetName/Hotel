@@ -4,6 +4,7 @@ import { getUser } from "../../entities/user/session.js";
 import { reviewApi } from "../../entities/review/api.js";
 import { showEditReviewModal } from "../../features/review-manage/index.js";
 import { SVG_star } from "../../shared/ui/svg/star.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 export async function loadReviews(hotel) {
     const reviewsList = hotelDetailSection.querySelector(".reviews-list");
@@ -27,12 +28,12 @@ export async function loadReviews(hotel) {
                 <div class="comment-card">
                     <div class="comment-header">
                         <div class="comment-user-info">
-                            <b class="comment-author">${review.user_name}</b>
+                            <b class="comment-author">${escapeHtml(review.user_name)}</b>
                             <span class="comment-score">${SVG_star} ${review.score}/5</span>
                         </div>
                         <span class="comment-date">${new Date(review.created_at).toLocaleDateString("ru-RU")}</span>
                     </div>
-                    <p class="comment-text">${review.comment_text}</p>
+                    <p class="comment-text">${escapeHtml(review.comment_text)}</p>
                     ${
                         user &&
                         (user.id === review.user_id || user.roles === "Admin")

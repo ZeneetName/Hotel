@@ -6,6 +6,9 @@ import { hotelApi } from "../../entities/hotel/api.js";
 import { fileFieldHtml } from "../../shared/ui/fileField.js";
 import { renderHotels } from "../../pages/hotels/index.js";
 import { renderHotelDetail } from "../../pages/hotel-detail/index.js";
+import { clearBookingScopeCache } from "../../entities/booking/scope.js";
+import { setHeaderAuth } from "../../widgets/header/index.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 import { SVG_upload } from "../../shared/ui/svg/upload.js";
 import { SVG_warning } from "../../shared/ui/svg/warning.js";
 
@@ -47,6 +50,9 @@ export function showCreateHotelModal() {
             await hotelApi.create(formData);
             hideModal();
             Toast.success("Жильё успешно добавлено!");
+            // Владелец мог стать «менеджером» — пересчитываем scope и шапку.
+            clearBookingScopeCache();
+            setHeaderAuth(true);
             renderHotels();
         } catch (err) {
             const msg = typeof err === "object" ? JSON.stringify(err) : err;
@@ -70,19 +76,19 @@ export function showEditHotelPage(hotel) {
             <div class="edit-hotel-form">
                 <div class="form-group">
                     <label>Название гостиницы</label>
-                    <input type="text" class="hotel-title-input" value="${hotel.title || ""}" placeholder="Например, Гранд Отель">
+                    <input type="text" class="hotel-title-input" value="${escapeHtml(hotel.title)}" placeholder="Например, Гранд Отель">
                 </div>
                 <div class="form-group">
                     <label>Город</label>
-                    <input type="text" class="hotel-city-input" value="${hotel.city || ""}" placeholder="Например, Москва">
+                    <input type="text" class="hotel-city-input" value="${escapeHtml(hotel.city)}" placeholder="Например, Москва">
                 </div>
                 <div class="form-group form-group--full">
                     <label>Адрес</label>
-                    <input type="text" class="hotel-address-input" value="${hotel.address || ""}" placeholder="Улица, дом">
+                    <input type="text" class="hotel-address-input" value="${escapeHtml(hotel.address)}" placeholder="Улица, дом">
                 </div>
                 <div class="form-group form-group--full">
                     <label>Описание</label>
-                    <textarea class="hotel-description-input" rows="6" placeholder="Расскажите гостям о вашем жилье...">${hotel.description || ""}</textarea>
+                    <textarea class="hotel-description-input" rows="6" placeholder="Расскажите гостям о вашем жилье...">${escapeHtml(hotel.description)}</textarea>
                 </div>
                 <div class="form-group form-group--full">
                     <label>Текущее фото</label>
@@ -156,7 +162,7 @@ export function showDeleteHotelConfirm(hotel) {
         <div class="confirm-dialog">
             <div class="confirm-icon">${SVG_warning}</div>
             <h2>Удаление гостиницы</h2>
-            <p class="confirm-message">Вы уверены, что хотите удалить гостиницу "${hotel.title}"?</p>
+            <p class="confirm-message">Вы уверены, что хотите удалить гостиницу "${escapeHtml(hotel.title)}"?</p>
             <p class="confirm-warning">Это действие нельзя отменить. Все номера и бронирования будут удалены.</p>
             <div class="confirm-actions">
                 <button class="btn confirm-delete-btn" style="background: #dc3545;">Удалить</button>
@@ -171,6 +177,9 @@ export function showDeleteHotelConfirm(hotel) {
             await hotelApi.remove(hotel.id);
             hideModal();
             Toast.success("Гостиница успешно удалена");
+            // После удаления владелец мог перестать быть «менеджером».
+            clearBookingScopeCache();
+            setHeaderAuth(true);
             hideAllSections();
             renderHotels();
         } catch (err) {

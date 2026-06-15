@@ -22,19 +22,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!un78%g(yp7t2j$+twztjb8p86q_70dijo_cs%12cyz-r+0y05'
+# Берём из окружения, если задан (в проде не храним секрет в коде).
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-!un78%g(yp7t2j$+twztjb8p86q_70dijo_cs%12cyz-r+0y05',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS',
-    'localhost,127.0.0.1,[::1],backend',
+    'localhost,127.0.0.1,[::1],backend,10.0.70.55',
 
 ).split(',')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost",
+    "http://10.0.70.55"
 ]
 
 AUTH_USER_MODEL = 'app.CustomAuthenticationUser'
@@ -42,7 +47,19 @@ AUTH_USER_MODEL = 'app.CustomAuthenticationUser'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':[
         'rest_framework.authentication.TokenAuthentication'
-    ]
+    ],
+    # Троттлинг защищает API от перебора паролей и флуда запросами.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '120/min',
+        'user': '600/min',
+        # Жёсткие лимиты на аутентификацию — защита от перебора паролей.
+        'login': '10/min',
+        'register': '30/hour',
+    },
 }
 
 # Application definition
@@ -159,4 +176,38 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
     "http://127.0.0.1:5500",
     "http://localhost:5500",
+    "http://10.0.70.55"
 ]
+
+# ============================================================
+#  БЕЗОПАСНОСТЬ
+# ============================================================
+
+# Базовые заголовки безопасности (безопасны и для http).
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# Куки сессии/CSRF — недоступны из JS и защищены SameSite=Lax от CSRF.
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Доверенные источники для CSRF-проверки POST-форм/админки.
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS',
+    'http://localhost,http://127.0.0.1,http://10.0.70.55',
+).split(',')
+
+# HTTPS-only усиления включаем только в проде (DEBUG=False), чтобы не ломать
+# локальную разработку по http.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # За обратным прокси (nginx) Django понимает, что соединение по HTTPS.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

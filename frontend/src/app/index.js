@@ -12,6 +12,7 @@ import {
 import { hideModal } from "../shared/ui/modal.js";
 import { getUser } from "../entities/user/session.js";
 import { setHeaderAuth } from "../widgets/header/index.js";
+import { enhanceSortSelect } from "../widgets/sort-select/index.js";
 import { renderHotels } from "../pages/hotels/index.js";
 import { renderProfile } from "../pages/profile/index.js";
 import { renderBookings } from "../pages/bookings/index.js";
@@ -27,7 +28,6 @@ AvatarHotel.innerHTML = SVG_hotel
 const AvatarHotelFooter = document.querySelector(".footer-brand-mark");
 AvatarHotelFooter.innerHTML = SVG_hotel
 
-// --- Навигация ---
 siteTitle.style.cursor = "pointer";
 siteTitle.onclick = () => {
     hideAllSections();
@@ -39,8 +39,6 @@ btnProfile.onclick = renderProfile;
 btnBookings.onclick = renderBookings;
 btnCreateHotel.onclick = showCreateHotelModal;
 
-// Маркетинговый CTA «Добавить жильё» на главной — тот же поток создания.
-// Неавторизованного гостя сначала отправляем на аутентификацию.
 const homeCtaBtn = document.querySelector(".home-cta-btn");
 if (homeCtaBtn)
     homeCtaBtn.onclick = () => {
@@ -50,7 +48,6 @@ if (homeCtaBtn)
         }
         showCreateHotelModal();
     };
-// --- Поиск гостиниц на главной: по городу и свободным датам ---
 const homeSearchBtn = document.querySelector(".home-search-btn");
 if (homeSearchBtn) {
     const heroEl = document.querySelector(".home-hero");
@@ -83,15 +80,24 @@ if (homeSearchBtn) {
     cityInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") runHomeSearch();
     });
-    // Не даём выбрать выезд раньше заезда.
     checkInInput.addEventListener("change", () => {
         if (checkInInput.value) checkOutInput.min = checkInInput.value;
     });
-    // Смена сортировки сразу перезагружает список с текущими фильтрами.
-    if (sortSelect) sortSelect.addEventListener("change", runHomeSearch);
+    if (sortSelect) {
+        sortSelect.addEventListener("change", () => {
+            const inSearch = document
+                .querySelector(".hotels-section")
+                ?.classList.contains("search-active");
+            if (inSearch) {
+                runHomeSearch();
+            } else {
+                renderHotels(false, { ordering: sortSelect.value });
+            }
+        });
+        enhanceSortSelect(sortSelect);
+    }
 }
 
-// --- Навигация в подвале ---
 document.querySelectorAll(".footer-nav").forEach((link) => {
     link.addEventListener("click", (e) => {
         e.preventDefault();
@@ -100,7 +106,6 @@ document.querySelectorAll(".footer-nav").forEach((link) => {
             renderHotels();
             return;
         }
-        // Бронирования и профиль доступны только авторизованным.
         if (!getUser()) {
             renderAuthForm();
             return;
@@ -116,7 +121,6 @@ modal.onclick = (e) => {
     }
 };
 
-// Совместимость: доступ к setHeaderAuth из других частей кода
 window.setHeaderAuth = setHeaderAuth;
 setHeaderAuth(!!getUser());
 

@@ -29,24 +29,27 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
+            aspect-ratio: 1 / 1;
+            padding: 0;
+            box-sizing: border-box;
             border: none;
             border-radius: 50%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.45);
             color: #fff;
-            font-size: 24px;
+            font-size: 16px;
             line-height: 1;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.15s;
             z-index: 2;
         }
-        .room-carousel-btn:hover { background: rgba(0, 0, 0, 0.8); }
-        .room-carousel-prev { left: 12px; }
-        .room-carousel-next { right: 12px; }
+        .room-carousel-btn:hover { background: rgba(0, 0, 0, 0.7); }
+        .room-carousel-prev { left: 10px; }
+        .room-carousel-next { right: 10px; }
         .room-carousel-counter {
             position: absolute;
             top: 12px;

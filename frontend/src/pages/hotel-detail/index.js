@@ -18,6 +18,7 @@ import { showCreateDishModal, showEditDishModal } from "../../features/dish-mana
 import { showCreateServiceModal, showEditServiceModal } from "../../features/service-manage/index.js";
 import { showRoomDetailModal } from "../../widgets/room-detail-modal/index.js";
 import { setupRoomCarousel } from "../../widgets/room-carousel/index.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 import { loadReviews } from "../../widgets/reviews/index.js";
 import {SVG_city} from "../../shared/ui/svg/city.js";
 import { SVG_edit } from "../../shared/ui/svg/edit.js";
@@ -75,9 +76,9 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                     <span class="hd-badge">${ratingNum > 0 ? `★ ${ratingText} из 5` : "Нет оценок"}</span>
                     <span class="hd-editor">${SVG_trophy} Популярный</span>
                 </div>
-                <h1 class="hd-title">${hotel.title}</h1>
+                <h1 class="hd-title">${escapeHtml(hotel.title)}</h1>
                 <div class="hd-meta">
-                    <span class="hd-loc">${SVG_city} ${[hotel.address, hotel.city].filter(Boolean).join(", ") || "Адрес не указан"}</span>
+                    <span class="hd-loc">${SVG_city} ${escapeHtml([hotel.address, hotel.city].filter(Boolean).join(", ")) || "Адрес не указан"}</span>
                     <span class="hd-rate">
                         <span class="hd-stars">★★★★★</span>
                         <b>${ratingText}</b>
@@ -107,7 +108,7 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                     <section class="hd-tabpanel" data-panel="overview">
                         <div class="hd-block">
                             <h2>Об отеле</h2>
-                            <p class="hd-text">${hotel.description || "Описание отеля пока не добавлено."}</p>
+                            <p class="hd-text">${escapeHtml(hotel.description) || "Описание отеля пока не добавлено."}</p>
                         </div>
                         <div class="hd-facts" data-facts></div>
                         <div class="hd-block hd-included" data-included hidden>
@@ -118,14 +119,13 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                             <h2>Расположение</h2>
                             <div class="hd-map">
                                 <div class="hotel-address-container">
-                                    <span class="hd-map-pin"></span><p>${hotel.address || "Адрес не указан"}</p>
+                                    <span class="hd-map-pin"></span><p>${escapeHtml(hotel.address) || "Адрес не указан"}</p>
                                 </div>
-                                <p class="text-muted">${SVG_city} ${hotel.city || ""}</p>
+                                <p class="text-muted">${SVG_city} ${escapeHtml(hotel.city)}</p>
                             </div>
                         </div>
                     </section>
 
-                    <!-- ROOMS -->
                     <section class="hd-tabpanel" data-panel="rooms" hidden>
                         <div class="hd-section-head">
                             <h2>Доступные номера</h2>
@@ -152,7 +152,6 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                         <div class="additional-content"></div>
                     </section>
 
-                    <!-- REVIEWS -->
                     <section class="hd-tabpanel" data-panel="reviews" hidden>
                         <div class="hd-review-summary">
                             <div class="hd-review-score">
@@ -181,12 +180,12 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                                 <div class="owner-stat"><b data-reviews-num>0</b><span>отзывов</span></div>
                                 <div class="owner-stat"><b data-rooms-num>—</b><span>номеров</span></div>
                             </div>
-                            <p class="owner-card-bio">Рады приветствовать вас в «${hotel.title}». Мы делаем всё, чтобы ваш отдых был незабываемым — от бронирования до последнего дня пребывания.</p>
+                            <p class="owner-card-bio">Рады приветствовать вас в «${escapeHtml(hotel.title)}». Мы делаем всё, чтобы ваш отдых был незабываемым — от бронирования до последнего дня пребывания.</p>
                             <div class="owner-card-divider"></div>
                             <div class="owner-card-actions">
 
                                 ${hotel.owner_phone
-            ? `<a class="owner-act owner-act-ghost" href="tel:${hotel.owner_phone}">${SVG_phone} ${hotel.owner_phone}</a>`
+            ? `<a class="owner-act owner-act-ghost" href="tel:${escapeHtml(hotel.owner_phone)}">${SVG_phone} ${escapeHtml(hotel.owner_phone)}</a>`
             : ""}
                             </div>
                             <p class="owner-card-note">Бесплатная отмена до 72 часов до заезда</p>
@@ -198,10 +197,8 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
     </div>
     `;
 
-    // ---- Navigation / owner controls ----
     hotelDetailSection.querySelector(".back-btn").onclick = () => renderHotels();
 
-    // Кнопка «Мои бронирования» (для не-владельцев). Гостя без сессии — на вход.
     const bookingsBtn = hotelDetailSection.querySelector(".hd-bookings-btn");
     if (bookingsBtn)
         bookingsBtn.onclick = () => (user ? renderBookings() : renderAuthForm());
@@ -213,7 +210,6 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
         if (deleteHotelBtn) deleteHotelBtn.onclick = () => showDeleteHotelConfirm(hotel);
     }
 
-    // ---- Tab switching ----
     const tabs = hotelDetailSection.querySelectorAll(".hd-tab");
     const panels = hotelDetailSection.querySelectorAll(".hd-tabpanel");
     let amenitiesLoaded = false;
@@ -235,7 +231,6 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
         };
     });
 
-    // ---- Additional: menu & services ----
     const additionalBtns = hotelDetailSection.querySelectorAll(".additional-btn");
     const additionalContent = hotelDetailSection.querySelector(".additional-content");
 
@@ -260,9 +255,9 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                                 .map(
                                     (dish) => `
                                     <div class="dish-card">
-                                        ${dish.dish_images ? `<img src="${dish.dish_images}" alt="${dish.title}">` : ""}
-                                        <h4>${dish.title}</h4>
-                                        <p class="dish-composition">${dish.composition}</p>
+                                        ${dish.dish_images ? `<img src="${encodeURI(dish.dish_images)}" alt="${escapeHtml(dish.title)}">` : ""}
+                                        <h4>${escapeHtml(dish.title)}</h4>
+                                        <p class="dish-composition">${escapeHtml(dish.composition)}</p>
                                         <p class="dish-weight">${dish.weight}г</p>
                                         <p class="dish-price">${dish.price} ₽</p>
                                         ${isOwner
@@ -288,9 +283,9 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                                 .map(
                                     (service) => `
                                     <div class="service-card">
-                                        ${service.service_images ? `<img src="${service.service_images}" alt="${service.title}">` : `<div class="service-placeholder"></div>`}
+                                        ${service.service_images ? `<img src="${encodeURI(service.service_images)}" alt="${escapeHtml(service.title)}">` : `<div class="service-placeholder"></div>`}
                                         <div class="service-info">
-                                            <h4>${service.title}</h4>
+                                            <h4>${escapeHtml(service.title)}</h4>
                                             <p class="service-duration">Длительность: ${service.duration} мин</p>
                                             <p class="service-price">${service.price} ₽</p>
                                         </div>
@@ -366,7 +361,6 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
         if (addRoomBtn) addRoomBtn.onclick = () => showCreateRoomModal(hotel);
     }
 
-    // ---- Reviews count (for header & owner stats) ----
     reviewApi
         .list(hotel.id)
         .then((res) => {
@@ -381,13 +375,11 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
         })
         .catch(() => {});
 
-    // ---- Rooms ----
     try {
         const res = await roomApi.list(hotel.id);
         const rooms = res.data || res;
         const list = hotelDetailSection.querySelector(".rooms-list");
 
-        // Facts (overview)
         const factsEl = hotelDetailSection.querySelector("[data-facts]");
         const roomsNumEl = hotelDetailSection.querySelector("[data-rooms-num]");
         if (roomsNumEl) roomsNumEl.textContent = rooms.length;
@@ -408,7 +400,6 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                 .join("");
         }
 
-        // "Что включено" — aggregate unique amenities across rooms
         const includedEl = hotelDetailSection.querySelector("[data-included]");
         const amenitiesGrid = hotelDetailSection.querySelector("[data-amenities-grid]");
         if (includedEl && amenitiesGrid) {
@@ -423,14 +414,12 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
             }
         }
 
-        // Gallery cells — fill with room images
         rooms.slice(0, 4).forEach((r, i) => {
             const cell = hotelDetailSection.querySelector(`[data-gallery-cell="${i}"]`);
             const img = noImg(r.room_images);
             if (cell && img) cell.style.backgroundImage = `url('${img}')`;
         });
 
-        // Room cards
         if (!rooms.length) {
             list.innerHTML = `<p class="text-muted">В этой гостинице пока нет номеров.</p>`;
         } else {
@@ -462,7 +451,7 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                         ${mediaHtml}
                         <div class="hd-room-body">
                             <div>
-                                <h3 class="hd-room-name">${typeLabel}</h3>
+                                <h3 class="hd-room-name">${escapeHtml(r.title) || typeLabel}</h3>
                                 <div class="hd-room-specs">
                                     <span>⤢ ${r.square || "—"} м²</span>
                                     <span>${SVG_people} до ${r.max_place || "—"} гостей</span>
@@ -484,13 +473,11 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
                 .join("");
         }
 
-        // Inline photo carousels on the room cards (left/right arrows)
         list.querySelectorAll(".hd-room .room-carousel").forEach((carouselEl) => {
             const count = carouselEl.querySelectorAll(".room-carousel-slide").length;
             setupRoomCarousel(carouselEl, count);
         });
 
-        // Card click → room detail modal (ignore carousel controls)
         list.querySelectorAll(".room-card-detail").forEach((card) => {
             card.onclick = (e) => {
                 if (
@@ -538,6 +525,5 @@ export async function renderHotelDetail(hotel, skipHistory = false) {
         if (list) list.textContent = "Ошибка загрузки номеров";
     }
 
-    // ---- Reviews (interactive list) ----
     loadReviews(hotel);
 }

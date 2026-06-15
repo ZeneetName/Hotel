@@ -3,11 +3,12 @@ import { modal } from "../../shared/ui/dom.js";
 import Toast from "../../shared/ui/toast.js";
 import { reviewApi } from "../../entities/review/api.js";
 import { loadReviews } from "../../widgets/reviews/index.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 export function showEditReviewModal(hotel, review) {
     showModal(`
         <h2>Редактировать отзыв</h2>
-        <textarea class="edit-comment-input" rows="4">${review.comment_text}</textarea>
+        <textarea class="edit-comment-input" rows="4">${escapeHtml(review.comment_text)}</textarea>
         <div style="margin: 12px 0;">
             <label>Оценка:</label>
             <div class="star-rating edit-stars" data-rating="${review.score}">

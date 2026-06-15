@@ -3,6 +3,7 @@ import { modal, hotelDetailSection } from "../../shared/ui/dom.js";
 import Toast from "../../shared/ui/toast.js";
 import { serviceApi } from "../../entities/service/api.js";
 import { fileFieldHtml } from "../../shared/ui/fileField.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 function openServicesTab() {
     const servicesBtn = hotelDetailSection.querySelector(
@@ -55,7 +56,7 @@ export function showCreateServiceModal(hotel) {
 export function showEditServiceModal(hotel, service) {
     showModal(`
         <h2>Редактировать услугу</h2>
-        <input type="text" class="edit-service-title" value="${service.title}" placeholder="Название услуги">
+        <input type="text" class="edit-service-title" value="${escapeHtml(service.title)}" placeholder="Название услуги">
         <label>Цена (₽): <input type="number" class="edit-service-price" value="${service.price}" min="0"></label>
         <label>Длительность (мин): <input type="number" class="edit-service-duration" value="${service.duration}" min="1"></label>
         ${service.service_images ? `<img src="${service.service_images}" class="service-image-preview" alt="Текущее фото">` : ""}

@@ -3,17 +3,68 @@
 //  - владелец хотя бы одной гостиницы: «Бронирования гостиниц» (брони своих гостиниц,
 //    может редактировать/удалять);
 //  - администратор: «Бронирования гостиниц» (все брони, бесконечная прокрутка).
+//
+// Чтобы не дёргать бэкенд при каждом обновлении страницы, результат кэшируется
+// в localStorage (привязан к id пользователя). На рефреше берём готовый scope из
+// кэша — запрос к серверу делается только при первом расчёте или при force
+// (логин/логаут/создание/удаление гостиницы кэш сбрасывают).
 
 import { getUser } from "../user/session.js";
 import { hotelApi } from "../hotel/api.js";
 
-export async function getBookingScope() {
+const SCOPE_CACHE_KEY = "booking_scope";
+
+function guestScope() {
+    return {
+        user: null,
+        roles: null,
+        isAdmin: false,
+        isOwnerManager: false,
+        canManage: false,
+        label: "Мои бронирования",
+    };
+}
+
+function readCache(userId) {
+    try {
+        const raw = localStorage.getItem(SCOPE_CACHE_KEY);
+        if (!raw) return null;
+        const cached = JSON.parse(raw);
+        return cached && cached.userId === userId ? cached.scope : null;
+    } catch {
+        return null;
+    }
+}
+
+function writeCache(userId, scope) {
+    try {
+        localStorage.setItem(
+            SCOPE_CACHE_KEY,
+            JSON.stringify({ userId, scope }),
+        );
+    } catch {
+        /* localStorage недоступен — просто не кэшируем */
+    }
+}
+
+export function clearBookingScopeCache() {
+    localStorage.removeItem(SCOPE_CACHE_KEY);
+}
+
+export async function getBookingScope({ force = false } = {}) {
     const user = getUser();
-    const roles = user && user.roles;
+    if (!user) return guestScope();
+
+    if (!force) {
+        const cached = readCache(user.id);
+        if (cached) return { ...cached, user };
+    }
+
+    const roles = user.roles;
     const isAdmin = roles === "Admin";
 
     let ownsHotel = false;
-    if (user && (roles === "Owner" || isAdmin)) {
+    if (roles === "Owner" || isAdmin) {
         try {
             const hotels = await hotelApi.list();
             ownsHotel =
@@ -25,8 +76,7 @@ export async function getBookingScope() {
     }
 
     const isManager = isAdmin || ownsHotel;
-    return {
-        user,
+    const scope = {
         roles,
         isAdmin,
         // Владелец, у которого есть гостиницы (управляет только своими бронями).
@@ -35,4 +85,6 @@ export async function getBookingScope() {
         canManage: isManager,
         label: isManager ? "Бронирования гостиниц" : "Мои бронирования",
     };
+    writeCache(user.id, scope);
+    return { ...scope, user };
 }

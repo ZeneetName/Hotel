@@ -6,11 +6,12 @@ import { fileFieldHtml } from "../../shared/ui/fileField.js";
 import { amenitiesCheckboxesHtml, getSelectedAmenities } from "../../entities/room/amenities.js";
 import { renderHotelDetail } from "../../pages/hotel-detail/index.js";
 import { SVG_warning } from "../../shared/ui/svg/warning.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 export function showEditRoomModal(hotel, room) {
     showModal(`
         <h2>Редактировать номер</h2>
-        <input type="text" class="edit-room-title" value="${room.title || ""}" placeholder="Название номера">
+        <input type="text" class="edit-room-title" value="${escapeHtml(room.title)}" placeholder="Название номера">
         <label>Тип:
             <select class="room-type">
                 <option value="standard" ${room.type === "standard" ? "selected" : ""}>Стандартный</option>
@@ -21,7 +22,7 @@ export function showEditRoomModal(hotel, room) {
         <label>Количество мест: <input type="number" class="room-max-place" min="1" value="${room.max_place}"></label>
         <label>Площадь (м²): <input type="number" class="room-square" min="1" value="${room.square}"></label>
         <label>Описание:
-            <textarea class="room-description" rows="6">${room.description || ""}</textarea>
+            <textarea class="room-description" rows="6">${escapeHtml(room.description)}</textarea>
         </label>
         <div class="amenities-label">Удобства:</div>
         ${amenitiesCheckboxesHtml(Array.isArray(room.amenities) ? room.amenities : [])}

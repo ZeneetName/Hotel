@@ -4,6 +4,7 @@ import Toast from "../../shared/ui/toast.js";
 import { dishApi } from "../../entities/dish/api.js";
 import { fileFieldHtml } from "../../shared/ui/fileField.js";
 import { renderHotelDetail } from "../../pages/hotel-detail/index.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 function openMenuTab() {
     const menuBtn = hotelDetailSection.querySelector(
@@ -62,8 +63,8 @@ export function showCreateDishModal(hotel) {
 export function showEditDishModal(hotel, dish) {
     showModal(`
         <h2>Редактировать блюдо</h2>
-        <input type="text" class="edit-dish-title" value="${dish.title}" placeholder="Название блюда">
-        <textarea class="edit-dish-composition" rows="5">${dish.composition}</textarea>
+        <input type="text" class="edit-dish-title" value="${escapeHtml(dish.title)}" placeholder="Название блюда">
+        <textarea class="edit-dish-composition" rows="5">${escapeHtml(dish.composition)}</textarea>
         <label>Вес (г): <input type="number" class="edit-dish-weight" value="${dish.weight}" min="1"></label>
         <label>Цена (₽): <input type="number" class="edit-dish-price" value="${dish.price}" min="0"></label>
         ${dish.dish_images ? `<img src="${dish.dish_images}" class="dish-image-preview" alt="Текущее фото">` : ""}

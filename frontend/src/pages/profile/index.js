@@ -9,6 +9,7 @@ import { getBookingScope } from "../../entities/booking/scope.js";
 import { SVG_mail } from "../../shared/ui/svg/mail.js";
 import { SVG_mobile } from "../../shared/ui/svg/mobile.js";
 import { SVG_warning } from "../../shared/ui/svg/warning.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 const ROLE_LABELS = {
     Admin: "Администратор",
@@ -44,8 +45,8 @@ export async function renderProfile(skipHistory = false) {
             </div>
             <div class="profile-card">
                 <div class="profile-card-head">
-                    <div class="profile-avatar-large">${avatarInitial}</div>
-                    <h2 class="profile-name">${name}</h2>
+                    <div class="profile-avatar-large">${escapeHtml(avatarInitial)}</div>
+                    <h2 class="profile-name">${escapeHtml(name)}</h2>
                     <div class="profile-role-badge">${roleText}</div>
                 </div>
 
@@ -54,21 +55,21 @@ export async function renderProfile(skipHistory = false) {
                         <span class="profile-detail-icon">${SVG_mail}</span>
                         <div class="profile-detail-content">
                             <span class="profile-detail-label">Email</span>
-                            <span class="profile-detail-value">${user.email || "—"}</span>
+                            <span class="profile-detail-value">${escapeHtml(user.email) || "—"}</span>
                         </div>
                     </div>
                     <div class="profile-detail-item">
                         <span class="profile-detail-icon">${SVG_mobile}</span>
                         <div class="profile-detail-content">
                             <span class="profile-detail-label">Телефон</span>
-                            <span class="profile-detail-value">${user.phone || "Не указан"}</span>
+                            <span class="profile-detail-value">${escapeHtml(user.phone) || "Не указан"}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="profile-actions">
                     <button class="profile-action profile-action--primary profile-to-bookings">
-                        <span class="profile-action-ic"></span>
+                        <span class="profile-action-ic"> </span>
                         <span>
                             <b class="profile-bookings-label">Мои бронирования</b>
                             <small class="profile-bookings-hint">Посмотреть историю поездок</small>

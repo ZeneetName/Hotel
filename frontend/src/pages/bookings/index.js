@@ -12,12 +12,12 @@ import { SVG_building } from "../../shared/ui/svg/building.js";
 import { SVG_user } from "../../shared/ui/svg/user.js";
 import { SVG_edit } from "../../shared/ui/svg/edit.js";
 import { SVG_trash } from "../../shared/ui/svg/trash.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 import { SVG_bed } from "../../shared/ui/svg/bed.js";
 import { SVG_warning } from "../../shared/ui/svg/warning.js";
 import { SVG_clipboard } from "../../shared/ui/svg/clipboard.js";
 import { SVG_luggage } from "../../shared/ui/svg/luggage.js";
 
-// Красивое русское написание даты: «12 июня 2026».
 function fmtDate(value) {
     if (!value) return "—";
     const d = new Date(value);
@@ -29,7 +29,6 @@ function fmtDate(value) {
     });
 }
 
-// Число ночей между датами (если бэкенд не прислал total_days).
 function nights(b) {
     if (b.total_days) return Number(b.total_days);
     if (!b.check_in || !b.check_out) return 0;
@@ -37,7 +36,6 @@ function nights(b) {
     return Math.max(0, Math.round(ms / 86400000));
 }
 
-// Статус бронирования по датам относительно сегодня.
 function statusOf(b) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -67,9 +65,7 @@ export async function renderBookings(skipHistory = false) {
             : "Бронирования ваших гостиниц"
         : "Все ваши поездки в одном месте";
 
-    // Кнопку «Новое бронирование» не показываем владельцам и админам.
     const showExplore = !(scope.isAdmin || scope.roles === "Owner");
-    // Поиск по ID — только для администратора.
     const showSearch = scope.isAdmin;
 
     bookingsSection.innerHTML = `
@@ -111,7 +107,6 @@ export async function renderBookings(skipHistory = false) {
     const statsEl = bookingsSection.querySelector("[data-stats]");
     const sentinel = bookingsSection.querySelector("[data-sentinel]");
 
-    // --- Состояние постраничной загрузки ---
     const loaded = []; // накопленные брони
     let totalCount = 0; // всего броней по данным API
     let nextPage = 1; // следующая страница (null — больше нет)
@@ -166,7 +161,7 @@ export async function renderBookings(skipHistory = false) {
 
         const guestHtml =
             scope.canManage && (b.user_name || b.user_phone)
-                ? `<p class="booking-guest">${SVG_user} ${b.user_name || "Гость"}${b.user_phone ? ` · ${b.user_phone}` : ""}</p>`
+                ? `<p class="booking-guest">${SVG_user} ${escapeHtml(b.user_name) || "Гость"}${b.user_phone ? ` · ${escapeHtml(b.user_phone)}` : ""}</p>`
                 : "";
 
         const manageHtml = scope.canManage
@@ -179,10 +174,10 @@ export async function renderBookings(skipHistory = false) {
         el.innerHTML = `
             <div class="booking-card-main">
                 <div class="booking-card-top">
-                    <h3 class="booking-hotel">${b.hotel_name || "Гостиница"}</h3>
+                    <h3 class="booking-hotel">${escapeHtml(b.hotel_name) || "Гостиница"}</h3>
                     <span class="booking-status booking-status--${st.key}">${st.label}</span>
                 </div>
-                <p class="booking-room">${SVG_bed} ${b.room_title || "Номер"}</p>
+                <p class="booking-room">${SVG_bed} ${escapeHtml(b.room_title) || "Номер"}</p>
                 ${guestHtml}
                 <div class="booking-dates">
                     <div class="booking-date">
@@ -214,7 +209,6 @@ export async function renderBookings(skipHistory = false) {
         return el;
     }
 
-    // Заменяет данные карточки после редактирования.
     function refreshCard(el, updated) {
         const idx = loaded.findIndex((b) => b.id === updated.id);
         if (idx !== -1) loaded[idx] = { ...loaded[idx], ...updated };
@@ -240,7 +234,7 @@ export async function renderBookings(skipHistory = false) {
         showModal(`
             <div class="bk-edit">
                 <h2>Изменить бронирование</h2>
-                <p class="bk-edit-sub">${b.hotel_name || "Гостиница"} · ${b.room_title || "Номер"}</p>
+                <p class="bk-edit-sub">${escapeHtml(b.hotel_name) || "Гостиница"} · ${escapeHtml(b.room_title) || "Номер"}</p>
                 <label class="bk-edit-field">Дата заезда
                     <input type="date" class="edit-check-in" value="${b.check_in || ""}">
                 </label>
@@ -284,7 +278,7 @@ export async function renderBookings(skipHistory = false) {
             <div class="confirm-dialog">
                 <div class="confirm-icon">${SVG_warning}</div>
                 <h2>Удаление брони</h2>
-                <p class="confirm-message">Удалить бронирование «${b.room_title || "Номер"}» в «${b.hotel_name || "Гостиница"}»?</p>
+                <p class="confirm-message">Удалить бронирование «${escapeHtml(b.room_title) || "Номер"}» в «${escapeHtml(b.hotel_name) || "Гостиница"}»?</p>
                 <p class="confirm-warning">Это действие нельзя отменить.</p>
                 <div class="confirm-actions">
                     <button class="btn confirm-delete-btn" style="background:#dc3545;">Удалить</button>
@@ -379,7 +373,6 @@ export async function renderBookings(skipHistory = false) {
         }
     }
 
-    // Сбрасывает список и запускает загрузку заново (например, после поиска).
     function reload() {
         stopObserver();
         loaded.length = 0;
@@ -399,7 +392,6 @@ export async function renderBookings(skipHistory = false) {
         loadNext();
     }
 
-    // Поиск брони по ID (только для админа).
     const searchForm = bookingsSection.querySelector("[data-search]");
     if (searchForm) {
         const input = searchForm.querySelector(".bookings-search-input");
@@ -421,7 +413,6 @@ export async function renderBookings(skipHistory = false) {
         };
     }
 
-    // Бесконечная прокрутка: подгружаем следующую страницу, когда виден sentinel.
     observer = new IntersectionObserver(
         (entries) => {
             if (entries.some((e) => e.isIntersecting)) loadNext();
@@ -430,6 +421,5 @@ export async function renderBookings(skipHistory = false) {
     );
     observer.observe(sentinel);
 
-    // Первая загрузка (на случай, если sentinel сразу не пересёкся).
     await loadNext();
 }

@@ -9,6 +9,7 @@ from rest_framework.authentication import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.throttling import AnonRateThrottle
 
 from .models import Hotel, Room, Review, Booking, Dish, Service
 from .serializers import (
@@ -28,13 +29,27 @@ from .permission import (
     CREATEUPDATEDELETE_FOR_OWNERHOTEL_AND_ADMIN_For_Booking_and_Room,
     CREATE_LIST_ROOM_For_Booking,
     Permission_NO_Create_for_Dish_Service,
+    Permission_ReviewViewSets,
 )
 from .utils import busy_room_ids_for_period, hotels_with_available_rooms
 
 
-class AuthRegisterViewSets(viewsets.ModelViewSet):
+# Анти-брутфорс: отдельные строгие лимиты по IP для входа и регистрации.
+class LoginRateThrottle(AnonRateThrottle):
+    scope = 'login'
 
-    @action(methods=['POST'], detail=False)
+
+class RegisterRateThrottle(AnonRateThrottle):
+    scope = 'register'
+
+
+# Базовый класс — ViewSet, а не ModelViewSet: здесь только кастомные действия
+# (register/login/profile). ModelViewSet дополнительно завёл бы автогенерируемые
+# CRUD-маршруты на /api/auth/ над несуществующим queryset (лишняя поверхность
+# атаки и 500 с трейсбэком). ViewSet регистрирует только объявленные действия.
+class AuthRegisterViewSets(viewsets.ViewSet):
+
+    @action(methods=['POST'], detail=False, throttle_classes=[RegisterRateThrottle])
     def register(self, request):
         try:
             serializer = RegistrationSerializer(data=request.data)
@@ -54,7 +69,7 @@ class AuthRegisterViewSets(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
-    @action(methods=['POST'], detail=False)
+    @action(methods=['POST'], detail=False, throttle_classes=[LoginRateThrottle])
     def login(self, request):
         try:
             serializer = LoginSerializer(data=request.data)
@@ -444,7 +459,10 @@ class BookingViewSets(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def final_price(self, request):
-        queryset = self.queryset
+        # Берём queryset с учётом роли (get_queryset), чтобы обычный пользователь
+        # видел суммы только по своим броням, владелец — по своим гостиницам,
+        # и не происходило утечки финансовых данных по всей системе.
+        queryset = self.get_queryset()
 
         data = queryset.values("user").annotate(
             total_price=ExpressionWrapper(F("room__price_on_one_day") * F("total_days"), DecimalField())
@@ -455,7 +473,10 @@ class BookingViewSets(viewsets.ModelViewSet):
 class ReviewViewSets(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticated]
+    # Объектная проверка прав: редактировать/удалять отзыв может только его
+    # автор или администратор (иначе любой авторизованный пользователь мог бы
+    # менять и удалять чужие отзывы — IDOR).
+    permission_classes = [Permission_ReviewViewSets]
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)

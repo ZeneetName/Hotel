@@ -4,6 +4,7 @@ import { loaderHtml } from "../../shared/ui/loader.js";
 import { hotelApi } from "../../entities/hotel/api.js";
 import { renderHotelDetail } from "../hotel-detail/index.js";
 import { ROOM_AMENITIES } from "../../entities/room/amenities.js";
+import { escapeHtml } from "../../shared/lib/escape-html.js";
 
 const BATCH_SIZE = 51;
 let scrollObserver = null;
@@ -28,10 +29,9 @@ function createHotelCard(hotel) {
         </div>
         <div class="hotel-info">
             <div class="hotel-card-top">
-                <h2>${hotel.title}</h2>
-                ${ratingText ? `<span class="hotel-card-rating">★ ${ratingText}</span>` : ""}
+                <h2>${escapeHtml(hotel.title)}</h2>
             </div>
-            <p class="hotel-card-city">г. ${hotel.city || "Город не указан"}</p>
+            <p class="hotel-card-city">г. ${escapeHtml(hotel.city) || "Город не указан"}</p>
             <div class="hotel-card-foot">
                 <div class="hotel-card-price">
                     ${hotel.min_price ? `<b>от ${hotel.min_price} ₽</b><span> / ночь</span>` : `<span class="text-muted">Цена по запросу</span>`}
